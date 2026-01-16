@@ -1,0 +1,4 @@
+D:\Projects\CustomerManagementSystem\customermanagementsystem.client\obj\Release\customermanagementsystem.client.esproj.CoreCompileInputs.cache
+F:\CustomerManagementSystem\customermanagementsystem.client\obj\Release\customermanagementsystem.client.esproj.CoreCompileInputs.cache
+Z:\Projects\HealthCare\customermanagementsystem.client\obj\Release\customermanagementsystem.client.esproj.CoreCompileInputs.cache
+F:\Projects\HealthCare\customermanagementsystem.client\obj\Release\customermanagementsystem.client.esproj.CoreCompileInputs.cache

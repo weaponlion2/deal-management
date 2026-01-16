@@ -1,0 +1,28 @@
+::-webkit-scrollbar {
+    width: 8px; /* Width of the scrollbar */
+  }
+  
+  .container::-webkit-scrollbar-thumb {
+    background-color: rgba(0, 0, 0, 0.5); /* Color of the scrollbar thumb */
+    border-radius: 8px; /* Rounded corners for the thumb */
+  }
+  
+  .container::-webkit-scrollbar-track {
+    background: transparent; /* Background of the scrollbar track */
+  }
+
+
+  @media print {
+    body * {
+      visibility: hidden;
+    }
+    .MuiTableContainer-root, .MuiTableContainer-root * {
+      visibility: visible;
+    }
+    .MuiTableContainer-root {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+    }
+  }
