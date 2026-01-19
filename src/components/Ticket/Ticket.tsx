@@ -52,6 +52,8 @@ export interface DropdownOption {
     itemtypename?: string;
     stagename?: string;
     stagecode?: string;
+    statusname?: string;
+    statuscode?: string;
     code?: string;
     paymenttermcode?: string,
     paymenttermname?: string
@@ -144,7 +146,7 @@ export interface DropdownList {
 }
 
 export const Priorites = [{ id: "LOW", name: "Low" }, { id: "MEDIUM", name: "Medium" }, { id: 'HIGH', name: 'High' }, { id: 'URGENT', name: 'Urgent' }, { id: "CRITICAL", name: "Critical" }] as const;
-export const Statuses = [{ id: "OPN", name: "OPEN" }, { id: "INP", name: "In Progress" }, { id: "PEN-US", name: "Pending (on us)" }, { id: "PEN-CS", name: "Pending (on customer)" }, { id: "CAN", name: "Cancelled" }, { id: "CLO", name: "Closed" }] as const;
+export const Statuses = [{ id: "OPN", name: "OPEN" }, { id: "INP", name: "In Progress" }, { id: "PEN-US", name: "Pending (on us)" }, { id: "PEN-CS", name: "Pending (on customer)" }, { id: "CAN", name: "Cancelled" }, { id: "CLO", name: "Closed" }, { id: "SR", name: "Services" }, { id: "RE", name: "Renewed" }, { id: "WI", name: "Withdrawn" }] as const;
 export type urlType = "pipelines" | "owners" | "organizations" | "contacts" | "itemtypes" | "items" | "statuses" | "priorities" | "tasks" | "dealtypes" | "stages" | "bilingFreqency" | "paymentTerm"
 export type contactType = DropdownOption & { firstName: string, lastName: string }
 export const Sources = [{ id: "CH", name: "Call Helpline" }, { id: "CSP", name: "Call Service Person" }, { id: "EMAIL", name: "Email" }, { id: "WH", name: "Whatsapp Helpline" }, { id: "WSP", name: "Whatsapp Service Person" },] as const;
@@ -157,9 +159,9 @@ export const urlList: Record<urlType, string> = {
     contacts: '/Contact/ShowAllContacts?id=0&pageno=0&recordperpage=10&showall=false',
     itemtypes: '/Pipeline/ShowPipelineItemType',
     tasks: '/MasterTask/ShowAllMtask?type=',
-    items: 'ItemType/Items?type=',
+    items: '/Product/ShowProduct?id=0&pipeline=',
     priorities: '',
-    statuses: '',
+    statuses: 'Deal/showdealstatus?id=0',
     dealtypes: 'Deal/ShowDealType?id=0',
     stages: '/Deal/showstage',
     bilingFreqency: '/Deal/ShowBillingFrequency',

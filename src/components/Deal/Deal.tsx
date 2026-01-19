@@ -1,18 +1,17 @@
 import dayjs from 'dayjs';
 import myAxios from '../api';
 import { AxiosError, AxiosResponse } from 'axios';
-import { CancelOutlined, Check } from '@mui/icons-material';
+import { CancelOutlined } from '@mui/icons-material';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { FIRE, HEADER_FIRE, Response, START_FIRE, START_LOADER } from '../Layout.Interface';
 import { Link as RLink, useLocation, useNavigate, useOutletContext, useParams } from "react-router-dom";
-import { Grid2 as Grid, TextField, Select, MenuItem, InputLabel, FormControl, Button, Typography, Box, SelectChangeEvent, Paper, Divider, FormGroup, Link, ListItemIcon, IconButton, Tooltip, CircularProgress, Dialog, DialogTitle, DialogContent, Stack } from '@mui/material';
+import { Grid2 as Grid, TextField, Select, MenuItem, InputLabel, FormControl, Button, Typography, Box, SelectChangeEvent, Paper, Divider, FormGroup, Link, IconButton, Tooltip, CircularProgress, Dialog, DialogTitle, DialogContent, Stack } from '@mui/material';
 import { TicketView } from '../Ticket/List';
-import { DropdownList, DropdownOption, fetchOptions, isValidDate, NView, Priorites } from '../Ticket/Ticket';
+import { DropdownList, DropdownOption, fetchOptions, isValidDate, NView } from '../Ticket/Ticket';
 // import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 // import { VisuallyHiddenInput } from '../Organization/Organization';
 import AddIcon from '@mui/icons-material/Add';
 import LabelIcon from '@mui/icons-material/Label';
-import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import { IDealView } from './List';
 import ContactModal from '../Ticket/ContactModal';
 import OrganizationModal from '../Ticket/OrganizationModal';
@@ -25,65 +24,54 @@ export interface IDeal extends Pick<TicketView, 'pipeline' | 'id'> {
     organizationName: string,
     contactName: string,
     contid: string,
-    priority: string,
-    stage: string,
-    status: string,
-    remarks: string,
-    amount: string,
-    closedate: string,
-    opendate: string,
-    userid: string,
-    itemType: string,
-    ditems: IDealItem[] | null,
-    itemId: string,
-    refId: number,
-    type: string,
-    file: string,
+    dealstatus: string,    
+    productid: string,
     billingcode: string,
     paymenttermcode: string,
     visitperyear: number,
+    remarks: string,
+    startdate: string,
+    enddate: string,
+    userid: number,
+
+    ticketlist: IDealItem[] | null,
     previousdealid: number,
 }
 
 export interface IDealItem {
-    dealid: number,
-    itemId: string,
-    waranty: string,
-    serialno: string,
-    dateofsale: string,
-    adid: number,
-    name: string,
-    billingFrequency: string,
-    validity: string
-}
-
-export interface IDealItem_N {
-    closedate: string,
-    opendate: string,
-    dealid: number,
+    tempId: number,
     id: number,
+    dealid: number,
+    productid: number,
+    pipeline: string,
+    source: string,
+    userid: number,
+    organizationId: number,
+    contactId: number,
+    status: string,
+    openDate: string,
+    closeDate: string,
+    remark: string,
 }
 
-export interface IErrorForm extends Omit<IDeal, 'closedate' | 'opendate' | 'ditems' | 'id' | 'file' | 'refId' | 'organizationName' | 'contactName'> { }
+export interface IErrorForm extends Omit<IDeal, 'id' | 'organizationName' | 'contactName' | 'userid' | "visitperyear"> { visitperyear: string }
 export const InitialErr: IErrorForm = {
-    amount: "",
     name: "",
     pipeline: "",
     contid: "",
     dealtypeid: "",
-    itemType: "",
     orgid: "",
-    priority: "",
-    userid: "",
-    itemId: "",
-    stage: "",
-    status: "",
+    dealstatus: "",
     remarks: "",
-    type: "",
     billingcode: "",
     paymenttermcode: "",
-    visitperyear: 0,
+    visitperyear: "",
     previousdealid: 0,
+    enddate: "",
+    startdate: "",
+    productid: "",
+    ticketlist: null,
+
 }
 export type SType = "ORGANIZATION" | "CONTACT" | "TICKET";
 // export const Stages: DropdownOption[] = [{ id: "IS", name: "Introduction sent" }, { id: "PD", name: "Presentation done" }, { id: "SR", name: "Services" }, { id: "SD", name: "Scope defined" }, { id: "DMB", name: "Decision maker brought in" }, { id: "FPS", name: "Final proposal sent" }, { id: "CW", name: "Closed Won" }, { id: "CL", name: "Closed Lost" }] as const;
@@ -99,41 +87,43 @@ const DealPage: React.FC = () => {
     const { did } = useParams<{ did: string | undefined }>();
     const location = useLocation();
     const renew = location.state?.renew;
-    const logedUser: string | null = localStorage.getItem("@Id");
-    const [itemSet, setItemSet] = useState<Set<string>>(new Set());
+    const logedUser: number = localStorage.getItem("@Id") === null ? -1 : parseInt(localStorage.getItem("@Id") ?? "-1"); 
     const { startFir, setUpHeader, startLoader } = useOutletContext<{ startFir: FIRE; setUpHeader: HEADER_FIRE, startLoader: START_LOADER }>();
     const [ticketData, setTicketData] = useState<IDeal>({
         id: 0,
         pipeline: '-1',
         orgid: '0',
         contid: '0',
-        itemType: '-1',
-        priority: 'MEDIUM',
-        opendate: dayjs().format("YYYY-MM-DDTHH:mm"),
-        closedate: "",
+        startdate: dayjs().format("YYYY-MM-DDTHH:mm"),
+        enddate: "",
         dealtypeid: "-1",
-        stage: "IS",
-        status: "-1",
+        dealstatus: "-1",
         remarks: "",
-        amount: "",
-        userid: "-1",
-        ditems: [],
+        userid: logedUser,
+        ticketlist: [],
         name: "",
-        itemId: "-1",
-        type: "0",
-        file: "",
-        refId: 0,
         organizationName: "",
         contactName: "",
         billingcode: "-1",
         paymenttermcode: "-1",
         visitperyear: 0,
         previousdealid: 0,
+        productid: "-1",
     });
-    const [itemData, setItemData] = useState<IDealItem_N[]>([]);
-    const [warningList, setWarningList] = useState<IErrorForm>(InitialErr);
-    const [replicateIndex, setReplicateIndex] = useState<number | null>(null);
-    const [replicateValue, setReplicateValue] = useState<string>("");
+    const [itemData, setItemData] = useState<IDealItem[]>([]);
+    const [warningList, setWarningList] = useState<IErrorForm>(InitialErr); 
+
+    const navigate = useNavigate();
+    const oriRef = useRef<HTMLDivElement | null>(null);
+    const conRef = useRef<HTMLDivElement | null>(null);
+    const [loader, setLoader] = useState<boolean>(false);
+    const [searchOrigan, setSearchOrigan] = useState<boolean>(false);
+    const [searchCont, setSearchCont] = useState<boolean>(false);
+    const handleMsg = (obj: START_FIRE) => startFir(obj);
+    const [contactModel, setContactModel] = useState<boolean>(false);
+    const [organizationModel, setOrganizationModel] = useState<boolean>(false);
+    const handleContactModel = (val: boolean) => setContactModel(val);
+    const handleOrganizationModel = (val: boolean) => setOrganizationModel(val);
 
     const [productList, setProductList] = useState<NView[]>([]);
     const [editMode, setEditMode] = useState<boolean>(false);
@@ -148,7 +138,7 @@ const DealPage: React.FC = () => {
         filetypes: [...FileTypes],
         bilingFreqency: [],
         paymentTerm: []
-    })
+    });
 
     useEffect(() => {
         setUpHeader({
@@ -183,7 +173,7 @@ const DealPage: React.FC = () => {
                 paymentTerm: await fetchOptions('paymentTerm')
             });
             startLoader(false)
-            setTicketData((prev) => ({ ...prev, userid: logedUser ?? "-1" }))
+            setTicketData((prev) => ({ ...prev, userid: logedUser }));
             if (did) {
                 await getData(did);
             }
@@ -198,7 +188,14 @@ const DealPage: React.FC = () => {
                     return [];
                 },
             });
-    }, [did]);
+    }, [did]);  
+
+    useEffect(() => {
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+        };
+    }, []);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
@@ -207,37 +204,51 @@ const DealPage: React.FC = () => {
         if (name === "visitperyear") {
             const visitperyear = Number(value);
             if (visitperyear > 15) {
-                // Handle the case where visitperyear exceeds 15
                 setWarningList((prev) => ({ ...prev, visitperyear: "Visit per year cannot exceed 15." }));
                 return;
             }
             else {
-                setWarningList((prev) => ({ ...prev, visitperyear: "" }));
-                const initialValue: IDealItem_N[] = new Array(visitperyear).fill({ closedate: "", opendate: "", dealid: 0, id: 0 });
-                setItemData(initialValue);        
+                if (visitperyear === 0) {                    
+                    setWarningList((prev) => ({ ...prev, visitperyear: "Visit per year is required and must be a greater than 0." }));
+                }
+                else setWarningList((prev) => ({ ...prev, visitperyear: "" }));
+                let itemIndex = 1;
+                const initialValue: IDealItem[] = Array.from({length: visitperyear}, 
+                    () => ({ 
+                        dealid: 0, 
+                        id: 0,
+                        productid: ticketData.productid !== "" ? parseInt(ticketData.productid) : 0,
+                        pipeline: ticketData.pipeline,
+                        source: "PM",
+                        userid: logedUser,
+                        tempId: itemIndex++,
+                        organizationId: ticketData.orgid !== "" ? parseInt(ticketData.orgid) : 0,
+                        contactId: ticketData.contid !== "" ? parseInt(ticketData.contid) : 0,
+                        status: ticketData.dealstatus,
+                        remark: "",
+                        closeDate: dayjs().format("YYYY-MM-DD"),
+                        openDate: dayjs().format("YYYY-MM-DD")
+                    }));
+                setItemData(visitperyear === 0 ? [] : initialValue);        
                 setTicketData((prevData) => ({
                     ...prevData,
-                    visitperyear: visitperyear   
+                    visitperyear: visitperyear
                 }) );
             }
         }
-        else {            
+        else {
             setTicketData((prevData) => ({
                 ...prevData,
-                [name]: value   
+                [name]: value
             }));
         }
     };
 
-    // console.log("VISIT ", ticketData)
-
     const handleSelectChange = async (e: SelectChangeEvent<string>, field: string) => {
         const val: string = `${e.target.value}`;
-        // console.log("VAlues", val)
-        if (field === "itemType") {
-            setItemData([])
-            setItemSet(new Set())
-            setTicketData((ticketData) => ({ ...ticketData, itemId: '-1', itemType: val, task: "-1" }))
+        
+        if (field === "pipeline") {
+            setTicketData((ticketData) => ({ ...ticketData, itemId: '-1', itemType: val, pipeline: val }))
             if (val === "-1") {
                 setDropdownOptions((dropdownOptions) => ({ ...dropdownOptions, items: [], tasks: [] }));
             }
@@ -245,116 +256,26 @@ const DealPage: React.FC = () => {
                 const items: DropdownOption[] = await fetchOptions("items", val);
                 setDropdownOptions((dropdownOptions) => ({ ...dropdownOptions, items: items }));
             }
-        }
-        else if (field === "pipeline") {
-            setItemData([])
-            setItemSet(new Set())
-            setTicketData((ticketData) => ({ ...ticketData, itemId: '-1', itemType: val, task: "-1" }))
-            if (val === "-1") {
-                setDropdownOptions((dropdownOptions) => ({ ...dropdownOptions, items: [], tasks: [] }));
-            }
-            else {
-                const items: DropdownOption[] = await fetchOptions("items", val);
-                setDropdownOptions((dropdownOptions) => ({ ...dropdownOptions, items: items }));
-            }
-        }
-        else if (field === "itemId") {
-            const vl = val.split("+");
-            if (vl[0] === "-1") return;
-
-            setItemData((data) => {
-                const tasks: IDealItem[] = [];
-                let available: boolean = false;
-                for (let i = 0; i < data.length; i++) {
-                    if (`${data[i].itemId}` === vl[0]) {
-                        available = true;
-                    } else tasks.push(data[i]);
-                }
-                if (!available) {
-                    tasks.push({
-                        adid: 0,
-                        dateofsale: dayjs().format("YYYY-MM-DD"),
-                        dealid: ticketData.id,
-                        itemId: vl[0],
-                        serialno: '',
-                        name: vl[1],
-                        validity: dayjs().format("YYYY-MM-DD"),
-                        waranty: '',
-                        billingFrequency: vl[2]
-                    })
-                }
-                return tasks;
-            })
-
-            setItemSet((prevSet) => {
-                const newSet = new Set(prevSet);
-                if (prevSet.has(vl[0])) {
-                    newSet.delete(vl[0]);
-                } else {
-                    newSet.add(vl[0]);
-                }
-                return newSet;
-            })
         }
         else {
             setTicketData((prevData) => ({
                 ...prevData,
                 [field]: val,
             }));
-
-            if (field === "pipeline") {
-                setTicketData((prevData) => ({
-                    ...prevData,
-                    itemType: "-1",
-                    itemId: "-1",
-                }));
-
-                // Use val directly since it's the pipeline ID
-                const itemTypes: DropdownOption[] = await fetchOptions("itemtypes", `?pipelineid=${val}`);
-                setDropdownOptions((prevOptions) => ({
-                    ...prevOptions,
-                    itemTypes: itemTypes,
-                    items: [],
-                    tasks: [],
-                }));
-            }
         }
-    };
-
-    function removeTask(taskMasterId: string): void {
-        setItemData((itemData) => itemData.filter((item) => item.itemId !== taskMasterId));
-        setItemSet((prevSet) => {
-            const newSet = new Set(prevSet);
-            if (prevSet.has(`${taskMasterId}`)) {
-                newSet.delete(`${taskMasterId}`);
-            } else {
-                newSet.add(`${taskMasterId}`);
-            }
-            return newSet;
-        })
     };
 
     const handleSubmit = async (senderRoute?: string) => {
         // Handle the form submission
+        const ticketList = itemData.map((item) => ({...item, productid: ticketData.productid, pipeline: ticketData.pipeline, organizationId: parseInt(ticketData.orgid), contactId: parseInt(ticketData.contid), status: item.status != "" ? item.status : "OPN", dealid: ticketData.id, userid: logedUser, source: item.source != "" ? item.source : "PM"}));
+
         startLoader(true)
-        const isValid = itemData.every(item => item.waranty);
-        //  console.log(isValid)
-        if (!isValid) {
-            startFir({
-                msg: "Warranty Date required",
-                type: 'E'
-            })
-            startLoader(false);
-            return;
-        }
-        //console.log(itemData) 
-        const itemModel = itemData.map((v) => ({ ...v, dealid: 0, adid: 0, waranty: v?.waranty ? dayjs(v?.waranty).format("YYYY-MM-DD") : "", }));
-        if (validateInput() === true) {
+        if (validateInput() === true && isValidDate(ticketData.startdate) && isValidDate(ticketData.enddate)) {
             let response: AxiosResponse<Response<IDealView[]>>;
             if (renew) {
-                response = await myAxios.post(`/Deal/SaveDeal`, { ...ticketData, id: 0, previousdealid: did, opendate: isValidDate(ticketData.opendate) === true ? ticketData.opendate : "", closeDate: isValidDate(ticketData.closedate) === true ? ticketData.closedate : "", ditems: itemModel });
+                response = await myAxios.post(`/Deal/SaveDeal`, { ...ticketData, id: 0, ticketlist: ticketList });
             } else {
-                response = await myAxios.post(`/Deal/SaveDeal`, { ...ticketData, opendate: isValidDate(ticketData.opendate) === true ? ticketData.opendate : "", closeDate: isValidDate(ticketData.closedate) === true ? ticketData.closedate : "", ditems: itemModel });
+                response = await myAxios.post(`/Deal/SaveDeal`, { ...ticketData, ticketlist: ticketList });
             }
             const { status, data } = response.data;
             try {
@@ -366,34 +287,10 @@ const DealPage: React.FC = () => {
                     if (senderRoute) {
                         if (data && data.length > 0) {
                             // handleNavigate(senderRoute, data[0] as IDealView)
-                            setProductList(() => {
-                                const list: NView[] = [];
-                                itemData.map((e) => {
-                                    list.push({
-                                        amount: "",
-                                        contactId: Number(ticketData.contid),
-                                        contactName: ticketData.contactName,
-                                        dealId: data[0]['id'],
-                                        dealItemId: 0,
-                                        dealName: e.name,
-                                        itemType: ticketData.itemType,
-                                        organizationName: ticketData.organizationName,
-                                        organizationId: Number(ticketData.orgid),
-                                        phone: "",
-                                        pId: e.itemId,
-                                        pipeline: ticketData.pipeline,
-                                        priority: "",
-                                        serialno: e.serialno,
-                                        vindustry: "",
-                                        userid: `${ticketData.userid}`
-                                    })
-                                })
-                                return list;
-                            })
-                            setEditMode(true)
+                            // setEditMode(true)
                         }
                     }
-                    else handleNavigate("/deals")
+                    // else handleNavigate("/deals")
                 } else {
                     startFir({
                         msg: "Unable to save deal",
@@ -406,8 +303,6 @@ const DealPage: React.FC = () => {
                 } else {
                     console.log("An unexpected error occurred");
                 }
-
-
                 startFir({
                     msg: "Something went wrong",
                     type: "E"
@@ -433,48 +328,45 @@ const DealPage: React.FC = () => {
             errList.dealtypeid = "Deal type is required."
             isValid = false;
         }
-        if (!ticketData.stage || ticketData.stage === '-1') {
-            errList.stage = "Organization is required."
-            isValid = false;
-        }
-        if (!ticketData.itemType || ticketData.itemType === '-1') {
-            errList.itemType = "Item Type is required."
-            isValid = false;
-        }
-        if (itemData.length < 1) {
-            errList.itemId = "Please select atleast one item."
-            isValid = false;
-        }
-        if (!ticketData.priority || ticketData.priority === '-1') {
-            errList.priority = "Priority is required."
-            isValid = false;
-        }
-        if (!ticketData.userid || ticketData.userid === '-1') {
-            errList.userid = "Owner is required."
-            isValid = false;
-        }
-        if (!ticketData.amount) {
-            errList.amount = "Amount is required."
+        if (!ticketData.dealstatus || ticketData.dealstatus === '-1') {
+            errList.dealstatus = "Status is required."
             isValid = false;
         }
         if (!ticketData.billingcode || ticketData.billingcode === "") {
             errList.billingcode = "Billing Frequency is required."
             isValid = false;
         }
-        if (!ticketData.paymenttermcode || ticketData.paymenttermcode === "") {
+        if (!ticketData.paymenttermcode || ticketData.paymenttermcode === "-1") {
             errList.paymenttermcode = "Payment Term is required."
             isValid = false;
         }
-        // if (ticketData.file && ticketData.file != "") {
-        //     if (!ticketData.type || ticketData.type === '0') {
-        //         errList.type = "File Type is required."
-        //         isValid = false;
-        //     }
-        // }
-        // if (ticketData.billingcode && ticketData.billingcode != "") {
-        //         errList.type = "Billing Frequency is required."
-        //         isValid = false;
-        // }
+        if (!ticketData.enddate || ticketData.enddate === "") {
+            errList.enddate = "End Date is required."
+            isValid = false;
+        }
+        if (!ticketData.startdate || ticketData.startdate === "") {
+            errList.startdate = "Start Date is required."
+            isValid = false;
+        }
+        if (!ticketData.productid || ticketData.productid === "-1") {
+            errList.productid = "Product is required."
+            isValid = false;
+        }
+        if (!ticketData.billingcode || ticketData.billingcode === "-1") {
+            errList.billingcode = "Billing Frequency is required."
+            isValid = false;
+        }
+        if (ticketData.visitperyear === 0) {
+            errList.visitperyear = "Visit per year is required and must be a greater than 0."
+            isValid = false;
+        }
+        else if (ticketData.visitperyear > 15) {
+            errList.visitperyear = "Visit per year must be less than or equal to 15."
+            isValid = false;
+        }
+        else {
+            errList.visitperyear = ""
+        }
         if (!isValid) {
             startFir({
                 msg: "Please fill up all required field.",
@@ -485,25 +377,39 @@ const DealPage: React.FC = () => {
         return isValid;
     };
 
-    //console.log(warningList)
-
     const getData = async (did: string) => {
         try { //2024-12-20
             const req = await myAxios.get(`/Deal/ShowDeals?id=${did}&showdealitem=true&fromdate=&todate=&pageno=0&recordperpage=0&showall=true`);
             if (req.status === 200) {
                 const { data, status }: Response<IDeal[]> = req.data;
                 if (status === "Success") {
-                    if (typeof data !== "undefined") {
-                        const items: DropdownOption[] = data[0]['itemType'] !== "" ? await fetchOptions("items", data[0]['itemType']) : [];
+                    const dealData = data && data.length > 0 ? data[0] : null;
+                    if (dealData !== null) {
+                        const items: DropdownOption[] = dealData['pipeline'] !== "" ? await fetchOptions("items", dealData['pipeline']) : [];
                         setDropdownOptions((dropdownOptions) => ({ ...dropdownOptions, items: [...items] }));
-                        setTicketData({ ...data[0], opendate: dayjs(data[0]['opendate']).format("YYYY-MM-DDTHH:mm"), itemType: `${data[0]['itemType'] === "" ? "-1" : data[0]['itemType']}`, itemId: "-1", closedate: data[0]['closedate'] !== "" ? dayjs(data[0]['closedate']).format("YYYY-MM-DDTHH:mm") : "", type: "0", file: "" })
-
-                        // setTicketData((tData) => ({ ...tData, contactName: val, contid: id }))
-                        // setTicketData((tData) => ({ ...tData, organizationName: val, orgid: id }))
-                        if (data[0]['ditems']) {
-                            setItemData(data[0]['ditems']);
-                            setItemSet(new Set<string>(data[0]['ditems'].map((v) => `${v.itemId}`)))
-                        }
+                        setTicketData({ ...dealData, startdate: dayjs(dealData['startdate']).format("YYYY-MM-DDTHH:mm"), enddate: dealData['enddate'] !== "" ? dayjs(dealData['enddate']).format("YYYY-MM-DDTHH:mm") : "" });
+                        getTicketData(dealData.id);
+                    }
+                }
+            }
+        } catch (_err: unknown) {
+            if (_err instanceof AxiosError) {
+                console.log(_err.message);
+            } else {
+                console.log("An unexpected error occurred");
+            }
+        }
+    };
+    
+    const getTicketData = async (did: number) => {
+        try { //2024-12-20
+            const req = await myAxios.get(`/Ticket/ShowTicket?dealid=${did}&pageno=0&recordperpage=1&showall=true`);
+            if (req.status === 200) {
+                const { data, status }: Response<IDealItem[]> = req.data;
+                if (status === "Success") {
+                    const ticketData = data ?? [];
+                    if (ticketData !== null) {
+                        setItemData(ticketData);
                     }
                 }
             }
@@ -516,7 +422,6 @@ const DealPage: React.FC = () => {
         }
     };
 
-    const navigate = useNavigate();
     const handleNavigate = useCallback((arg0: string, state?: Record<any, any>): undefined => {
         navigate(arg0, { state: state ?? {} })
     }, []);
@@ -560,10 +465,6 @@ const DealPage: React.FC = () => {
         setLoader(false)
     }
 
-    const [loader, setLoader] = useState<boolean>(false);
-    const [searchOrigan, setSearchOrigan] = useState<boolean>(false);
-    const [searchCont, setSearchCont] = useState<boolean>(false);
-
     const handleSearch = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>, type: SType) => {
 
         if (type === "ORGANIZATION") {
@@ -599,8 +500,6 @@ const DealPage: React.FC = () => {
         setSearchCont(false)
         setSearchOrigan(false)
     }
-    const oriRef = useRef<HTMLDivElement | null>(null);
-    const conRef = useRef<HTMLDivElement | null>(null);
 
     const handleClickOutside = (event: MouseEvent) => {
         if (event.target !== null) {
@@ -613,19 +512,6 @@ const DealPage: React.FC = () => {
         }
 
     };
-
-    useEffect(() => {
-        document.addEventListener("mousedown", handleClickOutside);
-        return () => {
-            document.removeEventListener("mousedown", handleClickOutside);
-        };
-    }, []);
-
-    const handleMsg = (obj: START_FIRE) => startFir(obj);
-    const [contactModel, setContactModel] = useState<boolean>(false);
-    const [organizationModel, setOrganizationModel] = useState<boolean>(false);
-    const handleContactModel = (val: boolean) => setContactModel(val);
-    const handleOrganizationModel = (val: boolean) => setOrganizationModel(val);
 
     const callManipulator = useCallback((data: DropdownOption, type: "contact" | "organization") => {
         if (type === "contact") {
@@ -658,20 +544,20 @@ const DealPage: React.FC = () => {
 
     const handleFocus = (type: SType) => {
         if (type === "ORGANIZATION") {
-            const Index = dropdownOptions.organizations.findIndex((v) => v.id == ticketData.orgid)
+            const Index = dropdownOptions.organizations.findIndex((v) => v.id == ticketData.orgid);
             setTicketData((prev) => ({
                 ...prev,
                 organizationName: (dropdownOptions.organizations.length == 0) ? ticketData.organizationName : (Index !== -1) ? dropdownOptions.organizations[Index].name : ""
-            }))
-            setSearchOrigan(false)
+            }));
+            setSearchOrigan(false);
         }
         else if (type === "CONTACT") {
-            const Index = dropdownOptions.contacts.findIndex((v) => v.id == ticketData.contid)
+            const Index = dropdownOptions.contacts.findIndex((v) => v.id == ticketData.contid);
             setTicketData((prev) => ({
                 ...prev,
                 contactName: (dropdownOptions.contacts.length == 0) ? ticketData.contactName : (Index !== -1) ? dropdownOptions.contacts[Index].name : ""
-            }))
-            setSearchCont(false)
+            }));
+            setSearchCont(false);
         }
     }
 
@@ -742,7 +628,7 @@ const DealPage: React.FC = () => {
                                         {dropdownOptions.pipelines.length === 0 ? "No Pipelines" : "Choose Pipeline"}
                                     </MenuItem>
                                     {dropdownOptions.pipelines.map((option) => (
-                                        <MenuItem key={option.id} value={option.id}>
+                                        <MenuItem key={option.id} value={option.name}>
                                             {option.name}
                                         </MenuItem>
                                     ))}
@@ -778,32 +664,34 @@ const DealPage: React.FC = () => {
                         {/* Status Dropdown */}
                         <Grid size={{ xs: 12, sm: 6 }} >
                             <FormControl size='small' fullWidth>
-                                <InputLabel>Status</InputLabel>
+                                <InputLabel>Status {<><span style={{ color: 'red' }} >*</span></>}</InputLabel>
                                 <Select
-                                    value={ticketData.status}
-                                    onChange={(e) => handleSelectChange(e, 'status')}
-                                    label="Status"
+                                    value={ticketData.dealstatus}
+                                    onChange={(e) => handleSelectChange(e, 'dealstatus')}
+                                    label="Status *"
                                     size='small'
+                                    error={warningList.dealstatus !== "" ? true : false}
                                 >
                                     <MenuItem value={-1}>
                                         {dropdownOptions.status.length === 0 ? "No Status" : "Choose Status"}
                                     </MenuItem>
-                                    {dropdownOptions.status.map((option) => (
-                                        <MenuItem key={option.id} value={option.stagecode}>
-                                            {option.stagename}
+                                    {dropdownOptions?.status.map((option) => (
+                                        <MenuItem key={option.statuscode} value={option.statuscode}>
+                                            {option.statusname}
                                         </MenuItem>
                                     ))}
                                 </Select>
                             </FormControl>
-                            {warningList.status && (
+                            {/* {warningList.status && (
                                 <Typography
                                     variant="button"
                                     sx={{ display: "block", textAlign: "right", color: "red" }}
                                 >
                                     {warningList.status}
                                 </Typography>
-                            )}
+                            )} */}
                         </Grid>
+
                         {/* Organization Dropdown */}
                         <Grid size={{ xs: 12, sm: 6 }} sx={{ position: "relative", width: '48%' }}>
                             <Box sx={{ display: "flex", alignItems: "center" }}>
@@ -858,16 +746,16 @@ const DealPage: React.FC = () => {
                                     overflow: "auto"
                                 }}
                             >
-                                {/* <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                                {/* <Divider /> */}
+                                <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                                     <Typography variant="caption" fontSize={15} p={1} px={2}>
                                         List of Organization
                                     </Typography>
-                                    <IconButton tabIndex={-1} onClick={() => setSearchOrigan(false)}>
+                                    <IconButton tabIndex={-1} onClick={() => setSearchCont(false)}>
                                         <CancelOutlined />
                                     </IconButton>
-                                </Box> */}
-
-                                {/* <Divider /> */}
+                                </Box>
+                                <Divider />
 
                                 {dropdownOptions.organizations.map((v) => (
                                     <MenuItem key={v.id} onClick={() => changeData(`${v.id}`, v.name, "ORGANIZATION")}>
@@ -987,30 +875,34 @@ const DealPage: React.FC = () => {
                         <Grid size={{ xs: 12, sm: 6 }} >
                             <TextField
                                 // disabled
-                                label="Opening Date"
+                                label="Start Date"
                                 type="datetime-local"
                                 size='small'
                                 fullWidth
-                                value={ticketData.opendate}
+                                required
+                                onFocus={() => handleFocus('CONTACT')}
+                                value={ticketData.startdate}
                                 onChange={handleInputChange}
-                                name="opendate"
+                                name="startdate"
                                 InputLabelProps={{
                                     shrink: true,
                                 }}
+                                error={warningList.startdate !== "" ? true : false}
                             />
                         </Grid>
 
                         {/* Closing Date */}
                         {<Grid size={{ xs: 12, sm: 6 }} sx={{ visibility: "visible" }} >
                             <TextField
-                                label="Closing Date"
-                                placeholder='Closing Date'
+                                label="End Date"
+                                placeholder='End Date'
                                 size='small'
                                 fullWidth
+                                required
                                 type='datetime-local'
-                                value={ticketData.closedate}
+                                value={ticketData.enddate}
                                 onChange={handleInputChange}
-                                name="closedate"
+                                name="enddate"
                                 InputLabelProps={{
                                     shrink: true,
                                 }}
@@ -1019,61 +911,34 @@ const DealPage: React.FC = () => {
                                         color: "black",
                                     },
                                 }}
+                                error={warningList.enddate !== "" ? true : false}
                             />
                         </Grid>}
 
                         {/* Item Dropdown */}
                         <Grid size={{ xs: 12, sm: 6 }} >
                             <FormControl size='small' fullWidth>
-                                <InputLabel>Product</InputLabel>
+                                <InputLabel>Product {<><span style={{ color: 'red' }} >*</span></>}</InputLabel>
                                 <Select
-                                    value={ticketData.itemId}
-                                    onChange={(e) => handleSelectChange(e as SelectChangeEvent<string>, 'itemId')}
+                                    value={ticketData.productid}
+                                    onChange={(e) => handleSelectChange(e as SelectChangeEvent<string>, 'productId')}
                                     label="Product"
                                     size='small'
-                                    error={(ticketData.dealtypeid !== "-1" && itemData.length === 0) ? true : false}
+                                    required
+                                    error={warningList.productid !== "" ? true : false}
                                 >
                                     <MenuItem value={-1}>
-                                        {((typeof ticketData.dealtypeid === "number" && ticketData.dealtypeid === -1) || ticketData.dealtypeid === "-1") ? "Choose Product" : (dropdownOptions.dealtypes.length === 0 ? "No Product" : "Choose Product")}
+                                        {(parseInt(ticketData.pipeline) === -1 ? "Choose Pipeline First" : (dropdownOptions.items.length === 0 ? "No Product" : "Choose Product"))}
                                     </MenuItem>
                                     {dropdownOptions.items.map((option) => (
-                                        <MenuItem sx={{ justifyContent: "space-between" }} key={option.id} value={`${option.id}+${option.name}+${option.billingFrequency}`}>
+                                        <MenuItem sx={{ justifyContent: "space-between" }} key={option.id} value={`${option.id}`}>
                                             {option.name}
-                                            {
-                                                itemSet.has(`${option.id}`) && (
-                                                    <ListItemIcon>
-                                                        <Check />
-                                                    </ListItemIcon>
-                                                )
-                                            }
                                         </MenuItem>
                                     ))}
                                 </Select>
                             </FormControl>
                         </Grid>
 
-                        {/* <Grid size={{ xs: 12, sm: 6 }}>
-                            <FormControl size='small' fullWidth>
-                                <InputLabel>File Type {ticketData.file !== "" && <span style={{ color: 'red' }}> *</span>}</InputLabel>
-                                <Select
-                                    value={ticketData.type}
-                                    onChange={(e) => handleSelectChange(e, 'type')}
-                                    label={<>File Type {ticketData.file !== "" && <> *</>} </>}
-                                    size='small'
-                                    error={warningList.type !== "" ? true : false}
-                                >
-                                    <MenuItem selected value={"0"}>
-                                        {"Choose File Type"}
-                                    </MenuItem>
-                                    {dropdownOptions.filetypes.map((option) => (
-                                        <MenuItem key={option.id} value={option.id}>
-                                            {option.name}
-                                        </MenuItem>
-                                    ))}
-                                </Select>
-                            </FormControl>
-
-                        </Grid> */}
                         {/* Billing Frequency */}
                         <Grid size={{ xs: 12, sm: 6 }} >
                             <FormControl size='small' fullWidth>
@@ -1089,23 +954,15 @@ const DealPage: React.FC = () => {
                                         {dropdownOptions.bilingFreqency.length === 0 ? "No Billing Frequency" : "Choose Billing Frequency"}
                                     </MenuItem>
                                     {dropdownOptions.bilingFreqency.map((option) => (
-                                        <MenuItem key={option.id} value={`${option.code}`}>
+                                        <MenuItem key={option.code} value={`${option.code}`}>
                                             {option.name}
                                         </MenuItem>
                                     ))}
                                 </Select>
 
                             </FormControl>
-                            {warningList.billingcode && (
-                                <Typography
-                                    variant="button"
-                                    sx={{ display: "block", textAlign: "right", color: "red" }}
-                                >
-                                    {warningList.billingcode}
-                                </Typography>
-                            )}
-
                         </Grid>
+
                         {/* Payment Term */}
                         <Grid size={{ xs: 12, sm: 6 }} >
                             <FormControl size='small' fullWidth>
@@ -1121,21 +978,14 @@ const DealPage: React.FC = () => {
                                         {dropdownOptions?.paymentTerm.length === 0 ? "No Payment Term" : "Choose Payment Term"}
                                     </MenuItem>
                                     {dropdownOptions?.paymentTerm.map((option) => (
-                                        <MenuItem key={option.id} value={`${option.paymenttermcode}`}>
+                                        <MenuItem key={option.paymenttermcode} value={`${option.paymenttermcode}`}>
                                             {option.paymenttermname}
                                         </MenuItem>
                                     ))}
                                 </Select>
                             </FormControl>
-                            {warningList.paymenttermcode && (
-                                <Typography
-                                    variant="button"
-                                    sx={{ display: "block", textAlign: "right", color: "red" }}
-                                >
-                                    {warningList.paymenttermcode}
-                                </Typography>
-                            )}
                         </Grid>
+
                         <Grid size={{ xs: 12, sm: 6 }}>
                             <TextField
                                 label={<> Visit per year  <span style={{ color: 'red' }} >*</span></>}
@@ -1145,13 +995,11 @@ const DealPage: React.FC = () => {
                                 size='small'
                                 onFocus={() => { setSearchCont(false); setSearchOrigan(false) }}
                                 value={ticketData.visitperyear}
-                                error={warningList.visitperyear === null ? true : false}
-                                helperText={
-                                            !warningList.visitperyear
-                                                ? "Visit per year is required & its max value is 15" : ""
-                                        }
+                                error={warningList.visitperyear !== "" ? true : false}
+                                helperText={ warningList.visitperyear !== "" ? "Visit per year is required & its max value is 15" : ""}
                             />
                         </Grid>
+
                         <Grid size={{ xs: 12, sm: 12 }}>
                             <TextField
                                 label={<> Remarks</>}
@@ -1165,6 +1013,7 @@ const DealPage: React.FC = () => {
                                 rows={3}
                             />
                         </Grid>
+
                         {itemData && itemData.length > 0 && (
                             <Grid size={{ xs: 12, sm: 12 }}>     
                             <Typography variant="h6" align="left" >
@@ -1173,7 +1022,7 @@ const DealPage: React.FC = () => {
                             <Box sx={{ overflow: "auto", maxHeight: 390 }}>
                                 <FormGroup sx={{  gap: 1, flexDirection: "column", minWidth: "100%" }}>
                                     {itemData.map((v, i) => (
-                                        <React.Fragment key={v.id}>
+                                        <React.Fragment key={v.tempId}>
                                             <Box sx={{ justifyContent: "space-between", pt: 1, px: 0.5, alignItems: "center" }}>
                                                 <Grid container gap={1} >
                                                     <Grid size={5.8} >
@@ -1182,9 +1031,10 @@ const DealPage: React.FC = () => {
                                                             type="date"
                                                             size="small"
                                                             fullWidth
-                                                            value={v.opendate || ""}
-                                                            onChange={(e) => handleSerialInput(i, e.target.value, "opendate")}
-                                                            name="opendate"
+                                                            required
+                                                            value={v.openDate || ""}
+                                                            onChange={(e) => handleSerialInput(i, e.target.value, "openDate")}
+                                                            name="openDate"
                                                             InputLabelProps={{
                                                                 shrink: true,
                                                             }}
@@ -1192,9 +1042,9 @@ const DealPage: React.FC = () => {
                                                                 min: "2000-01-01",
                                                             }}
                                                             placeholder="YYYY-MM-DD"
-                                                            error={!v.opendate}
+                                                            error={!v.openDate}
                                                             helperText={
-                                                                !v.opendate
+                                                                !v.openDate
                                                                     ? "Open date is required": ""
                                                             }
                                                         />
@@ -1206,9 +1056,10 @@ const DealPage: React.FC = () => {
                                                             type="date"
                                                             size="small"
                                                             fullWidth
-                                                            value={v.closedate || ""}
-                                                            onChange={(e) => handleSerialInput(i, e.target.value, "closedate")}
-                                                            name="closedate"
+                                                            required
+                                                            value={v.closeDate || ""}
+                                                            onChange={(e) => handleSerialInput(i, e.target.value, "closeDate")}
+                                                            name="closeDate"
                                                             InputLabelProps={{
                                                                 shrink: true,
                                                             }}
@@ -1216,9 +1067,9 @@ const DealPage: React.FC = () => {
                                                                 min: "2000-01-01",
                                                             }}
                                                             placeholder="YYYY-MM-DD"
-                                                            error={!v.closedate}
+                                                            error={!v.closeDate}
                                                             helperText={
-                                                                !v.closedate
+                                                                !v.closeDate
                                                                     ? "Close date is required" : ""
                                                             }
                                                         />

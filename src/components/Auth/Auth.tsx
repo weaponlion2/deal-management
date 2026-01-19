@@ -112,7 +112,7 @@ function Auth(): JSX.Element {
 
     setLoginLoader(true);
     try {
-      const response = await myAxios.post(`/User/login`, { email: sendBody.email, password: sendBody.password });
+      const response = await myAxios.post(`/Auth/login`, { email: sendBody.email, password: sendBody.password });
       if (response.data.status === "Success") {
         setSnackbarOpen(true);
         const data = response.data.data[0];
@@ -158,7 +158,7 @@ function Auth(): JSX.Element {
 
   const verifyEmail = async () => {
 
-    let res = await myAxios.get(`User/ValidateOtp?Email=${sendBody.email}&OTP&otptype&validatetype=Email`);
+    let res = await myAxios.get(`Auth/ValidateOtp?Email=${sendBody.email}&OTP&otptype&validatetype=Email`);
 
 
     if (res.data.status === 'EMAILVALID') {
@@ -190,7 +190,7 @@ function Auth(): JSX.Element {
   }
 
   const saveOTP = async () => {
-    let res = await myAxios.get(`User/ValidateOtp?Email=${sendBody.email}&OTP=${otp}&otptype=CHNPWD&validatetype=Otp`);
+    let res = await myAxios.get(`Auth/ValidateOtp?Email=${sendBody.email}&OTP=${otp}&otptype=CHNPWD&validatetype=Otp`);
     if (res.data.status === 'OTPVERIFY') {
 
       navigate('/change/password', {

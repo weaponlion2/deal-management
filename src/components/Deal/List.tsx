@@ -4,8 +4,8 @@ import { DataGrid, GridColDef, GridRenderCellParams } from '@mui/x-data-grid';
 import { FIRE, HEADER_FIRE, Response, START_LOADER } from '../Layout.Interface';
 import { NavigateOptions, Link as RLink, useNavigate, useOutletContext } from "react-router-dom";
 import { Box, Button, Link, MenuItem, Paper, Stack, TextField, Tooltip, Typography } from '@mui/material';
-import { PrioriteNode, TicketView } from '../Ticket/List';
-import { fetchOptions, Priorites } from '../Ticket/Ticket';
+import { PrioriteNode, StatusTypography, TicketView } from '../Ticket/List';
+import { fetchOptions, Priorites, Statuses } from '../Ticket/Ticket';
 import { FileTypes, IDeal, IDealDropdown } from './Deal';
 import { AxiosError } from 'axios';
 import HandshakeIcon from '@mui/icons-material/Handshake';
@@ -48,6 +48,7 @@ export const useStageMap = () => {
     return stageMap;
 };
 
+
 // export const StageNode: Record<typeof Stages[number]['id'] | "-1", ReactNode> =
 // {
 //     "-1": <Typography fontWeight={"700"} color="warning" >None</Typography>,
@@ -64,28 +65,24 @@ export const useStageMap = () => {
 
 export default function DealList() {
     const { setUpHeader } = useOutletContext<{ startFir: FIRE; setUpHeader: HEADER_FIRE, startLoader: START_LOADER }>();
-    const [list, setList] = useState<IDealView[]>([])
-    const stageStyledMap = useStageMap();
+    const [list, setList] = useState<IDealView[]>([]) 
     const [dropdownOptions, setDropdownOptions] = useState<IDealDropdown>({
         pipelines: [],
         contacts: [],
-        items: [],
-        itemTypes: [],
+        items: [], 
         organizations: [],
-        owners: [],
-        priorities: [...Priorites],
-        stages: [],
+        owners: [], 
+        status: [],
         dealtypes: [],
         filetypes: [...FileTypes],
         bilingFreqency: [],
         paymentTerm: []
-    })
+    });
     const [filters, setFilters] = useState({
-        stage: '',
+        status: '0',
         dealtypeid: '0',
         ownername: '',
     });
-
 
     useEffect(() => {
         const loadDropdowns = async () => {
@@ -94,15 +91,13 @@ export default function DealList() {
                     pipelines: [],
                     organizations: [],
                     contacts: [],
-                    itemTypes: [],
                     items: [],
                     owners: [],
-                    priorities: [],
-                    stages: await fetchOptions('stages'),
                     filetypes: [],
                     dealtypes: await fetchOptions("dealtypes"),
                     bilingFreqency: [],
-                    paymentTerm: []
+                    paymentTerm: [],
+                    status: await fetchOptions("statuses"),
                 });
             } catch (err) {
                 console.error('Failed to load dropdowns', err);
@@ -138,28 +133,31 @@ export default function DealList() {
                 </Stack>
             ),
         },
-        // { field: 'pipeline', headerName: 'Pipeline', width: (1215 * 10 / 100) },
+        { field: 'pipeline', headerName: 'Pipeline', width: (1215 * 15 / 100) },
         // { field: 'organizationName', headerName: 'Organization Name', width: (1215 * 33 / 100) },
         // { field: 'contactName', headerName: 'Contact Name', width: (1215 * 15 / 100) },
-        { field: 'ownerName', headerName: 'Owner Name', width: (1215 * 15 / 100) },
+        // { field: 'ownerName', headerName: 'Owner Name', width: (1215 * 15 / 100) },
         { field: 'dealTypeName', headerName: 'Deal Type', width: (1215 * 10 / 100) },
         {
-            field: 'stage', headerName: 'Stages', width: (1215 * 10 / 100),
-            renderCell: (params: GridRenderCellParams<TicketView, string>): ReactNode => (
+              field: 'dealstatus',
+              headerName: 'Status',
+              width: (1215 * 15/ 100),
+              renderCell: (params: GridRenderCellParams<TicketView, typeof Statuses[number]['id']>): ReactNode => (
                 <>
-                    {stageStyledMap[params.value ?? '']}
+                  {params.value && StatusTypography[params.value]}
                 </>
-            )
-        },
+              ),
+              disableColumnMenu: true
+            },
         // { field: 'amount', headerName: 'Amount', width: (1215 * 10 / 100) },
-        {
-            field: 'priority', headerName: 'Priority', width: (1215 * 10 / 100),
-            renderCell: (params: GridRenderCellParams<TicketView, typeof Priorites[number]['id']>): ReactNode => (
-                <>
-                    {params.value && PrioriteNode[params.value]}
-                </>
-            ),
-        },
+        // {
+        //     field: 'priority', headerName: 'Priority', width: (1215 * 10 / 100),
+        //     renderCell: (params: GridRenderCellParams<TicketView, typeof Priorites[number]['id']>): ReactNode => (
+        //         <>
+        //             {params.value && PrioriteNode[params.value]}
+        //         </>
+        //     ),
+        // },
         {
             field: 'action',
             headerName: 'Action',
@@ -221,9 +219,7 @@ export default function DealList() {
         ) => {
             setLoader(true);
             try {
-                const { stage, dealtypeid, ownername } = filterValues;
-
-
+                const { status, dealtypeid, ownername } = filterValues;
                 const req = await myAxios.get(`/Deal/ShowDeals`, {
                     params: {
                         id: 0,
@@ -234,7 +230,7 @@ export default function DealList() {
                         recordperpage: perPage,
                         showall: false,
                         query,
-                        stage,
+                        status: status === '0' ? '' : status,
                         dealtypeid,
                         ownername,
                     },
@@ -328,25 +324,24 @@ export default function DealList() {
 
                     <Typography variant="h6" gutterBottom component="div"> Deal List</Typography>
 
-
+                    <Box sx={{display: "flex", gap: 1}}>
                     {/* Deal Type Filter */}
-
                     <TextField
                         select
-                        label="Stage"
+                        label="Status"
                         size="small"
-                        value={filters.stage}
+                        value={filters.status}
                         onChange={(e) => {
-                            const updated = { ...filters, stage: e.target.value };
+                            const updated = { ...filters, status: e.target.value };
                             setFilters(updated);
                             getData(paginationModel.page, paginationModel.pageSize, query ?? "", updated);
                         }}
                         sx={{ width: 180 }}
                     >
-                        <MenuItem value="">All</MenuItem>
-                        {dropdownOptions.stages.map((stage) => (
-                            <MenuItem key={stage.stagecode} value={stage.stagecode}>
-                                {stage.stagename}
+                        <MenuItem value="0">All</MenuItem>
+                        {dropdownOptions.status.map((v) => (
+                            <MenuItem key={v.statuscode} value={v.statuscode}>
+                                {v.statusname}
                             </MenuItem>
                         ))}
                     </TextField>
@@ -383,7 +378,7 @@ export default function DealList() {
                         sx={{ width: 200 }}
                         placeholder="Enter owner name"
                     />
-
+                    </Box>
 
                     <div style={{ marginTop: 7, marginBottom: 7, display: "flex", alignItems: "center" }}>
                         <TextField

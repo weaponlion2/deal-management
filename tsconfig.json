@@ -16,6 +16,7 @@
     "strictFunctionTypes": true,
     "strictBindCallApply": true,
     "esModuleInterop": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "ignoreDeprecations": "6.0"
   }, 
 }

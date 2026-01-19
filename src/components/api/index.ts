@@ -2,7 +2,8 @@ import axios from 'axios';
 
 //  export const host: string = "https://localhost:7003";
 // export const host: string = window.location.origin;
-export const host: string = "https://192.168.1.204:1008";
+export const host: string = "https://192.168.1.204:1132";
+// export const host: string = "https://192.168.1.204:1008";
 const baseURL: string = "/api/";
 
 const myAxios = axios.create({

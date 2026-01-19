@@ -49,6 +49,9 @@ export const StatusNode: Record<typeof Statuses[number]['id'] | "-1", ReactNode>
   "PEN-CS": <Chip label={"PENDING"} color="warning" />,
   "CAN": <Chip label={"CANCELLED"} color="secondary" />,
   "CLO": <Chip label={"CLOSED"} color="success" />,
+  "SR": <Chip label={"Services"} color="info" />,
+  "RE": <Chip label={"Renewed"} color="info" />,
+  "WI": <Chip label={"Withdrawn"} color="info" />,
 };
 
 export const StatusTypography: Record<typeof Statuses[number]['id'] | "-1", ReactNode> =
@@ -60,6 +63,9 @@ export const StatusTypography: Record<typeof Statuses[number]['id'] | "-1", Reac
   "PEN-CS": <Typography color="warning" >{"PENDING (on customer)"}</Typography>,
   "CAN": <Typography color="error" >{"CANCELLED"}</Typography>,
   "CLO": <Typography color="success" >{"CLOSED"}</Typography>,
+  "SR": <Typography color="info" >{"Services"}</Typography>,
+  "RE": <Typography color="info" >{"Renewed"}</Typography>,
+  "WI": <Typography color="info" >{"Withdrawn"}</Typography>,
 };
 
 export const PrioriteNode: Record<typeof Priorites[number]['id'] | "-1", ReactNode> =
@@ -98,11 +104,7 @@ export default function TiketList() {
       width: (1215 * 8) / 100,
       disableColumnMenu: true,
       renderCell: (params) => {
-        const selectedPipeline = dropdownOptions?.pipelines.find(
-          (item) => String(item.id) === String(params.value) // or params.row.pipeline
-        );
-
-        return <div>{selectedPipeline?.name ?? '-'}</div>;
+        return <div>{params.value ?? '-'}</div>;
       }
     },
     // { field: 'source', headerName: 'Source', width: (1215 * 10 / 100) },
@@ -110,15 +112,15 @@ export default function TiketList() {
       field: 'createdOn', headerName: 'CreatedOn', width: (1215 * 8 / 100), disableColumnMenu: true,
       renderCell: (params) => dayjs(params.value).format("YYYY-MM-DD")
     },
-    {
-      field: 'priority', headerName: 'Priority', width: (1215 * 10 / 100), disableColumnMenu: true,
-      renderCell: (params: GridRenderCellParams<TicketView, typeof Priorites[number]['id']>): ReactNode => (
-        <>
-          {params.value && PrioriteNode[params.value]}
-        </>
-      ),
-    },
-    { field: 'productName', headerName: 'Product', width: (1215 * 12 / 100), disableColumnMenu: true },
+    // {
+    //   field: 'priority', headerName: 'Priority', width: (1215 * 10 / 100), disableColumnMenu: true,
+    //   renderCell: (params: GridRenderCellParams<TicketView, typeof Priorites[number]['id']>): ReactNode => (
+    //     <>
+    //       {params.value && PrioriteNode[params.value]}
+    //     </>
+    //   ),
+    // },
+    { field: 'productName', headerName: 'Product', width: (1215 * 18 / 100), disableColumnMenu: true },
     {
       field: 'status',
       headerName: 'Status',
@@ -157,7 +159,7 @@ export default function TiketList() {
   const getData = useCallback(async (currPage: number = 0, perPage: number = 25, query: string = "") => {
     setLoader(true);
     try { //2024-12-20
-      const req = await myAxios.get(`/Tickets/ShowTicket?id=0&fromdate=&todate=&pageno=${currPage}&recordperpage=${perPage}&showall=false&query=${query}`);
+      const req = await myAxios.get(`/Ticket/ShowTicket?id=0&fromdate=&todate=&pageno=${currPage}&recordperpage=${perPage}&showall=false&query=${query}`);
       if (req.status === 200) {
         const { data, status, totalCount }: Response<TicketView[]> = req.data;
         if (status === "Success") {
@@ -189,11 +191,9 @@ export default function TiketList() {
       pipelines: [],
       contacts: [],
       items: [],
-      itemTypes: [],
       organizations: [],
       owners: [],
-      priorities: [],
-      stages: [],
+      status: [],
       dealtypes: [],
       filetypes: [],
       bilingFreqency: [],
@@ -262,11 +262,9 @@ useEffect (() =>{
           pipelines: await fetchOptions('pipelines'),
           organizations:[] ,
           contacts: [],
-          itemTypes: [],
           items: [],
           owners: [],
-          priorities: [],
-          stages: [],
+          status: [],
           filetypes: [],
           dealtypes: [],
           bilingFreqency: [],
