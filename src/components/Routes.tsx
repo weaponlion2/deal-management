@@ -12,8 +12,7 @@ import ContactList from "./Contact/List";
 import MasterTask from "./MasterTask/MasterTask";
 import MasterTaskList from "./MasterTask/List";
 import Product from "./Product/Product";
-import ProductList from "./Product/List";
-import TaskList from "./Task/List";
+import ProductList from "./Product/List"; 
 import DealList from "./Deal/List";
 import DealPage from "./Deal/Deal";
 import TicketView from "./Ticket/TicketView";
@@ -24,8 +23,7 @@ import NotFound from "../NotFound";
 import ESign from "./Other/ESign";
 import DealReport from "./Report/DealReport";
 import VisitReport from "./Report/VisitReport";
-import Dashboard from "./Dashboard";
-import TaskListView from  "./Task/TaskList"
+import Dashboard from "./Dashboard"; 
 
 interface PropType {
   setIsDark: () => void;
@@ -58,11 +56,7 @@ const Routes = (props: PropType) =>
           {
             path: "/tickets",
             element: <TicketList />
-          },
-          {
-            path: "/task",
-            element: <TaskListView/>
-          },
+          }, 
           {
             path: "/ticket/:uid",
             element: <TicketView />
@@ -74,11 +68,7 @@ const Routes = (props: PropType) =>
           {
             path: "/ticket/form/:uid",
             element: <Ticket />
-          },
-          {
-            path: "/ticket/task/:tkid",
-            element: <TaskList />
-          },
+          }, 
           {
             path: "/users",
             element: <Users />

@@ -60,12 +60,10 @@ export default function DealReport() {
     const [dropdownOptions, setDropdownOptions] = useState<IDealDropdown>({
         pipelines: [],
         contacts: [],
-        items: [],
-        itemTypes: [],
+        items: [], 
         organizations: [],
         owners: [],
-        priorities: [...Priorites],
-        stages: [],
+        status: [],
         dealtypes: [],
         filetypes: [...FileTypes],
         bilingFreqency: [],
@@ -138,16 +136,14 @@ export default function DealReport() {
                 setDropdownOptions({
                     pipelines: await fetchOptions('pipelines'),
                     organizations: await fetchOptions('organizations'),
-                    contacts: [],
-                    itemTypes: [],
+                    contacts: [], 
                     items: [],
-                    owners: [],
-                    priorities: dropdownOptions.priorities,
-                    stages: await fetchOptions('stages'),
+                    owners: [],  
                     filetypes: [],
                     dealtypes: await fetchOptions("dealtypes"),
                     bilingFreqency: [],
-                    paymentTerm: []
+                    paymentTerm: [],
+                    status: dropdownOptions.status
                 });
             } catch (err) {
                 console.error('Failed to load dropdowns', err);
@@ -261,16 +257,16 @@ export default function DealReport() {
 
                     <Grid size={{ xs: 12, sm: 4 }}>
                         <FormControl fullWidth size="small">
-                            <InputLabel>Stages</InputLabel>
+                            <InputLabel>Status</InputLabel>
                             <Select
                                 value={filter.stage}
                                 label="Stage"
                                 onChange={(e) => handleChange('stage', e.target.value)}
                             >
                                 <MenuItem value="0">
-                                    {dropdownOptions.stages.length === 0 ? "No Statuses" : "Choose Status"}
+                                    {dropdownOptions.status.length === 0 ? "No Statuses" : "Choose Status"}
                                 </MenuItem>
-                                {dropdownOptions.stages.map((option, i) => (
+                                {dropdownOptions.status.map((option, i) => (
                                     <MenuItem key={i} value={option.stagecode}>
                                         {option.stagename}
                                     </MenuItem>
@@ -279,25 +275,6 @@ export default function DealReport() {
                         </FormControl>
                     </Grid>
 
-                    <Grid size={{ xs: 12, sm: 4 }}>
-                        <FormControl fullWidth size="small">
-                            <InputLabel>Priority</InputLabel>
-                            <Select
-                                value={filter.priority}
-                                label="Priority"
-                                onChange={(e) => handleChange('priority', e.target.value)}
-                            >
-                                <MenuItem value="0">
-                                    {dropdownOptions.priorities.length === 0 ? "No Priorites" : "Choose Priority"}
-                                </MenuItem>
-                                {dropdownOptions.priorities.map((option) => (
-                                    <MenuItem key={option.id} value={option.id}>
-                                        {option.name}
-                                    </MenuItem>
-                                ))}
-                            </Select>
-                        </FormControl>
-                    </Grid>
 
                     <Grid container spacing={1} size={{ xs: 12, sm: 4 }}>
                         {/* Status Dropdown */}

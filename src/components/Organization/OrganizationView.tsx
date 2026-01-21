@@ -144,63 +144,63 @@ const OrganizationView: React.FC = () => {
                         </Box>
                     </Grid>}
                     <Grid size={{ xs: 12, sm: 6 }} >
-                        <Grid size={{ xs: 6, sm: 3 }}>
+                        <Grid size={{ xs: 6, sm: 4 }}>
                             <Typography variant="subtitle1" color='textSecondary' fontWeight={700}>{"Organization Name"}</Typography>
                         </Grid>
-                        <Grid size={{ xs: 6, sm: 9 }}>
+                        <Grid size={{ xs: 6, sm: 8 }}>
                             <Typography variant="body1">{ticketData.name}</Typography>
                         </Grid>
                     </Grid>
 
                     <Grid size={{ xs: 12, sm: 6 }} >
-                        <Grid size={{ xs: 6, sm: 3 }}>
+                        <Grid size={{ xs: 6, sm: 4 }}>
                             <Typography variant="subtitle1" color='textSecondary' fontWeight={700}>{"Type"}</Typography>
                         </Grid>
-                        <Grid size={{ xs: 6, sm: 9 }}>
+                        <Grid size={{ xs: 6, sm: 8 }}>
                             <Typography variant="body1">{ticketData.type === "-1" ? "NONE" : ticketData.type}</Typography>
                         </Grid>
                     </Grid>
 
                     <Grid size={{ xs: 12, sm: 6 }} >
-                        <Grid size={{ xs: 6, sm: 3 }}>
+                        <Grid size={{ xs: 6, sm: 4 }}>
                             <Typography variant="subtitle1" color='textSecondary' fontWeight={700}>{"Industry"}</Typography>
                         </Grid>
-                        <Grid size={{ xs: 6, sm: 9 }}>
+                        <Grid size={{ xs: 6, sm: 8 }}>
                             <Typography variant="body1">{ticketData.industry === "" ? "None" : ticketData.industry}</Typography>
                         </Grid>
                     </Grid>
 
                     <Grid size={{ xs: 12, sm: 6 }} >
-                        <Grid size={{ xs: 6, sm: 3 }}>
+                        <Grid size={{ xs: 6, sm: 4 }}>
                             <Typography variant="subtitle1" color='textSecondary' fontWeight={700}>{"State"}</Typography>
                         </Grid>
-                        <Grid size={{ xs: 6, sm: 9 }}>
+                        <Grid size={{ xs: 6, sm: 8 }}>
                             <Typography variant="body1">{ticketData.state}</Typography>
                         </Grid>
                     </Grid>
 
                     <Grid size={{ xs: 12, sm: 6 }} >
-                        <Grid size={{ xs: 6, sm: 3 }}>
+                        <Grid size={{ xs: 6, sm: 4 }}>
                             <Typography variant="subtitle1" color='textSecondary' fontWeight={700}>{"City"}</Typography>
                         </Grid>
-                        <Grid size={{ xs: 6, sm: 9 }}>
+                        <Grid size={{ xs: 6, sm: 8 }}>
                             <Typography variant="body1">{ticketData.city}</Typography>
                         </Grid>
                     </Grid>
 
                     <Grid size={{ xs: 12, sm: 6 }} >
-                        <Grid size={{ xs: 6, sm: 3 }}>
+                        <Grid size={{ xs: 6, sm: 4 }}>
                             <Typography variant="subtitle1" color='textSecondary' fontWeight={700}>{"Pincode"}</Typography>
                         </Grid>
-                        <Grid size={{ xs: 6, sm: 9 }}>
+                        <Grid size={{ xs: 6, sm: 8 }}>
                             <Typography variant="body1">{ticketData.pincode === "" ? "None" : ticketData.pincode}</Typography>
                         </Grid>
                     </Grid>
                     <Grid size={{ xs: 12, sm: 6 }} >
-                        <Grid size={{ xs: 6, sm: 3 }}>
+                        <Grid size={{ xs: 6, sm: 4 }}>
                             <Typography variant="subtitle1" color='textSecondary' fontWeight={700}>{"Address"}</Typography>
                         </Grid>
-                        <Grid size={{ xs: 6, sm: 9 }}>
+                        <Grid size={{ xs: 6, sm: 8 }}>
                             <Typography variant="body1">{ticketData.address}</Typography>
                         </Grid>
                     </Grid>
@@ -239,7 +239,6 @@ const OrganizationView: React.FC = () => {
             <TabelModel tType='DEAL' mid={orgId ?? '0'} />
             <TabelModel tType='CONTACT' mid={orgId ?? '0'} />
             <TabelModel tType='ORG-TIC' mid={orgId ?? '0'} />
-            <TabelModel tType='ORG-TASK' mid={orgId ?? '0'} />
             
         </>
     );

@@ -5,13 +5,12 @@ import { CancelOutlined } from '@mui/icons-material';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { FIRE, HEADER_FIRE, Response, START_FIRE, START_LOADER } from '../Layout.Interface';
 import { Link as RLink, useLocation, useNavigate, useOutletContext, useParams } from "react-router-dom";
-import { Grid2 as Grid, TextField, Select, MenuItem, InputLabel, FormControl, Button, Typography, Box, SelectChangeEvent, Paper, Divider, FormGroup, Link, IconButton, Tooltip, CircularProgress, Dialog, DialogTitle, DialogContent, Stack } from '@mui/material';
+import { Grid2 as Grid, TextField, Select, MenuItem, InputLabel, FormControl, Button, Typography, Box, SelectChangeEvent, Paper, Divider, FormGroup, Link, IconButton, Tooltip, CircularProgress, Stack } from '@mui/material';
 import { TicketView } from '../Ticket/List';
-import { DropdownList, DropdownOption, fetchOptions, isValidDate, NView } from '../Ticket/Ticket';
+import { DropdownList, DropdownOption, fetchOptions, isValidDate } from '../Ticket/Ticket';
 // import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 // import { VisuallyHiddenInput } from '../Organization/Organization';
-import AddIcon from '@mui/icons-material/Add';
-import LabelIcon from '@mui/icons-material/Label';
+import AddIcon from '@mui/icons-material/Add'; 
 import { IDealView } from './List';
 import ContactModal from '../Ticket/ContactModal';
 import OrganizationModal from '../Ticket/OrganizationModal';
@@ -124,9 +123,6 @@ const DealPage: React.FC = () => {
     const [organizationModel, setOrganizationModel] = useState<boolean>(false);
     const handleContactModel = (val: boolean) => setContactModel(val);
     const handleOrganizationModel = (val: boolean) => setOrganizationModel(val);
-
-    const [productList, setProductList] = useState<NView[]>([]);
-    const [editMode, setEditMode] = useState<boolean>(false);
     const [dropdownOptions, setDropdownOptions] = useState<IDealDropdown>({
         pipelines: [],
         contacts: [],
@@ -224,9 +220,9 @@ const DealPage: React.FC = () => {
                         tempId: itemIndex++,
                         organizationId: ticketData.orgid !== "" ? parseInt(ticketData.orgid) : 0,
                         contactId: ticketData.contid !== "" ? parseInt(ticketData.contid) : 0,
-                        status: ticketData.dealstatus,
+                        status: "OPN",
                         remark: "",
-                        closeDate: dayjs().format("YYYY-MM-DD"),
+                        closeDate: "",
                         openDate: dayjs().format("YYYY-MM-DD")
                     }));
                 setItemData(visitperyear === 0 ? [] : initialValue);
@@ -243,12 +239,12 @@ const DealPage: React.FC = () => {
             }));
         }
     };
-
+    
     const handleSelectChange = async (e: SelectChangeEvent<string>, field: string) => {
         const val: string = `${e.target.value}`;
         
         if (field === "pipeline") {
-            setTicketData((ticketData) => ({ ...ticketData, itemId: '-1', itemType: val, pipeline: val }))
+            setTicketData((ticketData) => ({ ...ticketData, itemType: val, pipeline: val }))
             if (val === "-1") {
                 setDropdownOptions((dropdownOptions) => ({ ...dropdownOptions, items: [], tasks: [] }));
             }
@@ -265,32 +261,26 @@ const DealPage: React.FC = () => {
         }
     };
 
-    const handleSubmit = async (senderRoute?: string) => {
+    const handleSubmit = async () => {
         // Handle the form submission
-        const ticketList = itemData.map((item) => ({...item, productid: ticketData.productid, pipeline: ticketData.pipeline, organizationId: parseInt(ticketData.orgid), contactId: parseInt(ticketData.contid), status: item.status != "" ? item.status : "OPN", dealid: ticketData.id, userid: logedUser, source: item.source != "" ? item.source : "PM"}));
+        const ticketList = itemData.map((item) => ({...item, productid: ticketData.productid, pipeline: ticketData.pipeline, organizationId: parseInt(ticketData.orgid), contactId: parseInt(ticketData.contid), status: item.status != "" ? item.status : "OPN", dealid: renew === true ? 0 : ticketData.id, userid: logedUser, source: item.source != "" ? item.source : "PM", id: renew == true ? 0 : item.id}));
 
         startLoader(true)
         if (validateInput() === true && isValidDate(ticketData.startdate) && isValidDate(ticketData.enddate)) {
             let response: AxiosResponse<Response<IDealView[]>>;
             if (renew) {
-                response = await myAxios.post(`/Deal/SaveDeal`, { ...ticketData, id: 0, ticketlist: ticketList });
+                response = await myAxios.post(`/Deal/SaveDeal`, { ...ticketData, id: 0, ticketlist: ticketList, previousdealid: ticketData.id });
             } else {
                 response = await myAxios.post(`/Deal/SaveDeal`, { ...ticketData, ticketlist: ticketList });
             }
-            const { status, data } = response.data;
+            const { status } = response.data;
             try {
                 if (status === "Success") {
                     startFir({
                         msg: "Deal save successfully",
                         type: "S"
-                    })
-                    if (senderRoute) {
-                        if (data && data.length > 0) {
-                            // handleNavigate(senderRoute, data[0] as IDealView)
-                            // setEditMode(true)
-                        }
-                    }
-                    // else handleNavigate("/deals")
+                    });
+                    handleNavigate("/deals");
                 } else {
                     startFir({
                         msg: "Unable to save deal",
@@ -387,7 +377,7 @@ const DealPage: React.FC = () => {
                     if (dealData !== null) {
                         const items: DropdownOption[] = dealData['pipeline'] !== "" ? await fetchOptions("items", dealData['pipeline']) : [];
                         setDropdownOptions((dropdownOptions) => ({ ...dropdownOptions, items: [...items] }));
-                        setTicketData({ ...dealData, startdate: dayjs(dealData['startdate']).format("YYYY-MM-DDTHH:mm"), enddate: dealData['enddate'] !== "" ? dayjs(dealData['enddate']).format("YYYY-MM-DDTHH:mm") : "" });
+                        setTicketData({ ...dealData, startdate: dayjs(dealData['startdate']).format("YYYY-MM-DDTHH:mm"), enddate: dealData['enddate'] !== "" ? dayjs(dealData['enddate']).format("YYYY-MM-DDTHH:mm") : "", dealstatus: renew == true ? "RE" : dealData["dealstatus"] });
                         getTicketData(dealData.id);
                     }
                 }
@@ -656,6 +646,7 @@ const DealPage: React.FC = () => {
                             <FormControl size='small' fullWidth>
                                 <InputLabel>Status {<><span style={{ color: 'red' }} >*</span></>}</InputLabel>
                                 <Select
+                                    disabled={renew === true ? true : false}
                                     value={ticketData.dealstatus}
                                     onChange={(e) => handleSelectChange(e, 'dealstatus')}
                                     label="Status *"
@@ -911,7 +902,7 @@ const DealPage: React.FC = () => {
                                 <InputLabel>Product {<><span style={{ color: 'red' }} >*</span></>}</InputLabel>
                                 <Select
                                     value={ticketData.productid}
-                                    onChange={(e) => handleSelectChange(e as SelectChangeEvent<string>, 'productId')}
+                                    onChange={(e) => handleSelectChange(e as SelectChangeEvent<string>, 'productid')}
                                     label="Product"
                                     size='small'
                                     required
@@ -980,6 +971,7 @@ const DealPage: React.FC = () => {
                             <TextField
                                 label={<> Visit per year  <span style={{ color: 'red' }} >*</span></>}
                                 fullWidth
+                                disabled={(did == "" || did == null || did == undefined || renew == true) ? false : true}
                                 name="visitperyear"
                                 onChange={handleInputChange}
                                 size='small'
@@ -1015,7 +1007,7 @@ const DealPage: React.FC = () => {
                                         <React.Fragment key={v.tempId}>
                                             <Box sx={{ justifyContent: "space-between", pt: 1, px: 0.5, alignItems: "center" }}>
                                                 <Grid container gap={1} >
-                                                    <Grid size={5.8} >
+                                                    <Grid size={12} >
                                                         <TextField
                                                             label="Open Date"
                                                             type="date"
@@ -1040,7 +1032,7 @@ const DealPage: React.FC = () => {
                                                         />
                                                     </Grid>
                                                     
-                                                    <Grid size={5.8} >
+                                                    {/* <Grid size={5.8} >
                                                         <TextField
                                                             label="Close Date"
                                                             type="date"
@@ -1064,7 +1056,7 @@ const DealPage: React.FC = () => {
                                                             }
                                                         />
 
-                                                    </Grid>
+                                                    </Grid> */}
                                                 </Grid>
 
                                             </Box>
@@ -1112,37 +1104,6 @@ const DealPage: React.FC = () => {
                     </Grid>
                 </Grid> 
             </Grid>
-
-
-            <Dialog
-                open={editMode}
-                onClose={() => { setEditMode(false); handleNavigate("/deals") }}
-            >
-                <DialogTitle>Select a product</DialogTitle>
-                <Divider />
-                <DialogContent sx={{ p: 0, m: 0 }}>
-                    <Box sx={{ height: 400, maxHeight: 400, minWidth: 400 }}>
-                        <Box sx={{ overflow: "auto", maxHeight: 390 }}>
-                            <FormGroup sx={{ flexDirection: "column", minWidth: "100%" }}>
-                                {productList.map((v) => (
-                                    <MenuItem key={v.pId} onClick={() => handleNavigate("/ticket/form", v)}>
-                                        <Box sx={{ pt: 1 }}>
-                                            <Box sx={{ display: "flex", gap: 1 }}>
-                                                <LabelIcon color='success' />
-                                                <Typography variant='overline'> {v.dealName}</Typography>
-                                            </Box>
-                                            <Box>
-                                                <Typography variant='overline'>Serial No : {v.serialno}</Typography>
-                                            </Box>
-                                        </Box>
-                                        <Divider />
-                                    </MenuItem>
-                                ))}
-                            </FormGroup>
-                        </Box>
-                    </Box>
-                </DialogContent>
-            </Dialog>
 
 
             <ContactModal open={contactModel} organizationList={dropdownOptions.organizations} handleModel={handleContactModel} startFir={handleMsg} callBack={callManipulator} />

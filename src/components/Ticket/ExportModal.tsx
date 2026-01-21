@@ -21,6 +21,9 @@ export const StatusText: Record<typeof Statuses[number]['id'] | "-1", string> =
   "PEN-CS": "PENDING (on customer)",
   "CAN": "CANCELLED",
   "CLO": "CLOSED",
+  "RE": "RENEWED",
+  "SR": "SERVICES",
+  "WI": "WITHDRAW"
 };
 
 interface ExportForm {

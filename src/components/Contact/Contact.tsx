@@ -5,7 +5,6 @@ import { DropdownOption, fetchOptions } from '../Ticket/Ticket';
 import { FIRE, HEADER_FIRE, Response, START_FIRE, START_LOADER } from '../Layout.Interface';
 import { Link as RLink, useNavigate, useOutletContext, useParams } from "react-router-dom";
 import { Grid2 as Grid, TextField, MenuItem, Button, Typography, Box, Paper, Divider, Link, FormControlLabel, Checkbox, IconButton, CircularProgress, Tooltip, Stack } from '@mui/material';
-import { Priorites } from '../Ticket/Ticket';
 import { FileTypes, IDealDropdown, SType } from '../Deal/Deal';
 import OrganizationModal from '../Ticket/OrganizationModal';
 import { green, red } from '@mui/material/colors';
@@ -63,12 +62,10 @@ const Contact: React.FC = () => {
     const [dropdownOptions, setDropdownOptions] = useState<IDealDropdown>({
         pipelines: [],
         contacts: [],
-        items: [],
-        itemTypes: [],
+        items: [], 
         organizations: [],
-        owners: [],
-        priorities: [...Priorites],
-        stages: [],
+        owners: [], 
+        status: [],
         dealtypes: [],
         filetypes: [...FileTypes],
         bilingFreqency:[],

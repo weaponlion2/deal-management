@@ -487,8 +487,7 @@ const CreateTicketPage: React.FC = () => {
             try {
                 const { data, status }: Response<TicketView[]> = response.data;
                 if (status === "Success") {
-                    if (typeof data !== "undefined") {
-                        const nData: TicketView = data[0];
+                    if (typeof data !== "undefined") { 
                         startFir({
                             msg: "Ticket save successfully",
                             type: "S"
@@ -520,6 +519,7 @@ const CreateTicketPage: React.FC = () => {
             }
         }
         startLoader(false)
+        setEmailData({} as IEmailPrep);
     };
 
     const validateInput = (): boolean => {
@@ -595,7 +595,7 @@ const CreateTicketPage: React.FC = () => {
     }, []);
 
     const getHistory = async (id: string) => {
-        const comm = await fetchComment(id, "TICKET")
+        const comm = await fetchComment("0", "TICKET", id)
         setCommentList(comm);
         toggleDrawer(true)();
     };
@@ -622,25 +622,7 @@ const CreateTicketPage: React.FC = () => {
             setDropdownOptions((options) => ({ ...options, contacts: [data, ...options.organizations] }));
             setTicketData((ticketData) => ({ ...ticketData, organizationId: `${data.id}`, organizationName: data.name }))
         }
-    }, [dropdownOptions])
-
-    const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const files: FileList | null = (e.target as HTMLInputElement).files;
-        const file = files && files.length > 0 ? files[0] : null
-
-        if (file) {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                const base64Result = reader.result as string;
-                setTicketData((prevData) => ({
-                    ...prevData,
-                    file: base64Result.split(",")[1],
-                    refId: Number(ticketData.id),
-                }));
-            };
-            reader.readAsDataURL(file);
-        }
-    };
+    }, [dropdownOptions]) 
 
     const getSearch = async (val: string, type: SType) => {
         setLoader(true)

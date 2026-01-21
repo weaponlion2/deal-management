@@ -132,10 +132,7 @@ export default function DealList() {
                 </Stack>
             ),
         },
-        { field: 'pipeline', headerName: 'Pipeline', width: (1215 * 15 / 100) },
-        // { field: 'organizationName', headerName: 'Organization Name', width: (1215 * 33 / 100) },
-        // { field: 'contactName', headerName: 'Contact Name', width: (1215 * 15 / 100) },
-        // { field: 'ownerName', headerName: 'Owner Name', width: (1215 * 15 / 100) },
+        { field: 'pipeline', headerName: 'Pipeline', width: (1215 * 15 / 100) }, 
         { field: 'dealTypeName', headerName: 'Deal Type', width: (1215 * 10 / 100) },
         {
               field: 'dealstatus',
@@ -147,16 +144,7 @@ export default function DealList() {
                 </>
               ),
               disableColumnMenu: true
-            },
-        // { field: 'amount', headerName: 'Amount', width: (1215 * 10 / 100) },
-        // {
-        //     field: 'priority', headerName: 'Priority', width: (1215 * 10 / 100),
-        //     renderCell: (params: GridRenderCellParams<TicketView, typeof Priorites[number]['id']>): ReactNode => (
-        //         <>
-        //             {params.value && PrioriteNode[params.value]}
-        //         </>
-        //     ),
-        // },
+            }, 
         {
             field: 'action',
             headerName: 'Action',
@@ -292,7 +280,7 @@ export default function DealList() {
 
                     <Typography variant="h6" gutterBottom component="div"> Deal List</Typography>
 
-                    <Box sx={{display: "flex", gap: 1}}>
+                    <Box sx={{display: "flex", gap: 1, paddingTop: 1}}>
                     {/* Deal Type Filter */}
                     <TextField
                         select
@@ -334,21 +322,8 @@ export default function DealList() {
                         ))}
                     </TextField>
 
-                    <TextField
-                        label="Owner"
-                        size="small"
-                        value={filters.ownername ?? ""}
-                        onChange={(e) => {
-                            const updated = { ...filters, ownername: e.target.value };
-                            setFilters(updated);
-                            getData(paginationModel.page, paginationModel.pageSize, query ?? "", updated);
-                        }}
-                        sx={{ width: 200 }}
-                        placeholder="Enter owner name"
-                    />
-                    </Box>
 
-                    <div style={{ marginTop: 7, marginBottom: 7, display: "flex", alignItems: "center" }}>
+                    <div style={{ display: "flex", alignItems: "center" }}>
                         <TextField
                             value={query ?? ""}
                             onChange={handleSearch}
@@ -367,6 +342,7 @@ export default function DealList() {
                             New Deal
                         </Button>
                     </div>
+                    </Box>
                 </Stack>
 
                 <Box sx={{ width: "100%", display: "flex", gap: 1 }}>

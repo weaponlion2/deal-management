@@ -50,8 +50,7 @@ import TimelineSeparator from "@mui/lab/TimelineSeparator";
 import TimelineConnector from "@mui/lab/TimelineConnector";
 import TimelineContent from "@mui/lab/TimelineContent";
 import TimelineDot from "@mui/lab/TimelineDot";
-import axios, { AxiosError, AxiosResponse } from "axios";
-import dayjs from "dayjs";
+import axios, { AxiosError, AxiosResponse } from "axios"; 
 import { IDealDropdown, FileTypes } from "../Deal/Deal";
 import {
   ArrowBack,
@@ -345,7 +344,7 @@ const TicketView: React.FC = () => {
         if (status === "Success") {
           if (typeof data !== "undefined") {
             setTicketData({ ...data[0] });
-            getHistory(`${ticketData.id}`);
+            getHistory(uid);
           }
         }
       }

@@ -216,9 +216,9 @@ export const Layout = ({ setIsDark, isDark }: PropType) => {
                             <Button variant='text' onClick={() => handleNavigate("/report/deal")} sx={{ display: 'block' }} >
                                 {"Deal Report"}
                             </Button>
-                            <Button variant='text' onClick={() => handleNavigate("/report/visit")} sx={{ display: 'block' }} >
+                            {/* <Button variant='text' onClick={() => handleNavigate("/report/visit")} sx={{ display: 'block' }} >
                                 {"Visit Report"}
-                            </Button>
+                            </Button> */}
                             {/* <Button variant='text' onClick={() => handleNavigate("/product")} sx={{ display: 'block' }} >
                                 {"Product"}
                             </Button> */}

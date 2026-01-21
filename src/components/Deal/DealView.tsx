@@ -30,7 +30,7 @@ import {
   fetchComment,
   fetchOptions
 } from "../Ticket/Ticket";
-import { FileTypes, IDeal, IDealDropdown, IDealItem } from "./Deal";
+import { FileTypes, IDeal, IDealDropdown } from "./Deal";
 import TabelModel from "../Other/TabelModel";
 import axios, { AxiosError, AxiosResponse } from "axios";
 import {
@@ -205,27 +205,6 @@ const DealView: React.FC = () => {
     }
     rewind();
   }, [did]);
-
-  const handleNavigate = (arg0: string, state: IDealItem): undefined => {
-    // const data: NView = {
-    //   amount: "",
-    //   contactId: Number(ticketData.contid),
-    //   contactName: ticketData.contactName,
-    //   dealId: Number(did) ?? 0,
-    //   dealItemId: 0,
-    //   dealName: "",
-    //   organizationName: ticketData.organizationName,
-    //   organizationId: Number(ticketData.orgid),
-    //   phone: "",
-    //   pId: state?.productid,
-    //   pipeline: pip,
-    //   priority: "",
-    //   serialno: state.serialno,
-    //   vindustry: "",
-    //   userid: `${ticketData.userid}`
-    // };
-    navigate(arg0, { state: {} });
-  };
 
   useEffect(() => {
     if (dropdownOptions.pipelines.length > 0) {

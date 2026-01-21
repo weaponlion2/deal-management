@@ -1,18 +1,16 @@
-import { Box, Button, FormControl, MenuItem, Paper, Select, Stack, Tooltip, Typography } from '@mui/material'
+import { Box, Button, Paper, Stack, Tooltip, Typography } from '@mui/material'
 import { DataGrid, GridColDef, GridRenderCellParams } from '@mui/x-data-grid'
 import { ReactNode, useEffect, useState } from 'react'
-import { PrioriteNode, StatusTypography, TicketView } from '../Ticket/List'
-import { IDealView, useStageMap } from '../Deal/List'
+import { StatusTypography, TicketView } from '../Ticket/List'
+import { IDealView } from '../Deal/List'
 import { ContactView } from '../Contact/List'
 import myAxios from '../api'
 import { Response } from '../Layout.Interface'
 import dayjs from 'dayjs'
-import { isValidDate, Priorites, Statuses, TicketForm } from '../Ticket/Ticket'
+import { Statuses, TicketForm } from '../Ticket/Ticket'
 // import { Stages } from '../Deal/Deal'
-import ListAltIcon from '@mui/icons-material/ListAlt';
 import { NavigateOptions, useNavigate } from 'react-router-dom'
-import { AxiosError } from 'axios'
-import { TaskView } from '../Task/TaskList'
+import { AxiosError } from 'axios' 
 // import BusinessIcon from '@mui/icons-material/Business';
 
 type ItType = "TICKET" | "DEAL" | "CONTACT" | "CONTACT-DEAL" | "CONTACT-TICKET" | "ORG-TIC" | "ORG-TASK"
@@ -33,8 +31,7 @@ const TabelModel = ({ mid, tType }: Props) => {
     const [paginationModel, setPaginationModel] = useState({
         page: 0,
         pageSize: 5,
-    });
-    const stageStyledMap = useStageMap();
+    }); 
 
     useEffect(() => {
         if (mid !== '0') {
@@ -46,67 +43,6 @@ const TabelModel = ({ mid, tType }: Props) => {
     const handleNavigate = (arg0: string, state?: NavigateOptions): undefined => {
         navigate(arg0, state)
     };
-
-    const columnOrgTask: GridColDef[] = [
-        { field: 'taskname', headerName: 'Task', width: (1215 * 25 / 100) },
-        {
-            field: 'startDate', headerName: 'Start / End Date', width: (1215 * 20 / 100),
-            renderCell: (params) => (
-                <>
-                    {dayjs(params.value).format("YYYY-MM-DD")}
-                    {isValidDate(params.row.endDate) && ` / ${dayjs(params.row.endDate).format("YYYY-MM-DD")}`}
-                </>
-            )
-        },
-        { field: 'ownername', headerName: 'Owner', width: (1215 * 20 / 100), editable: true },
-        {
-            field: 'taskstatus',
-            headerName: 'Status',
-            width: (1215 * 20 / 100),
-            editable: true,
-            renderCell: (params: GridRenderCellParams<TaskView, typeof Statuses[number]['id']>): ReactNode => (
-                <>
-                    {params.value && StatusTypography[params.value]}
-                </>
-            ),
-            renderEditCell: (params): ReactNode => (
-                <>
-                    <FormControl size='medium' fullWidth>
-                        <Select
-                            value={params.row.status}
-                            // onChange={(e) => handleSelectChange(e, 'status')}
-                            size='small'
-                            variant='filled'
-                        >
-                            {Statuses.map((option) => (
-                                <MenuItem key={option.id} value={option.id}>
-                                    {option.name}
-                                </MenuItem>
-                            ))}
-                        </Select>
-                    </FormControl>
-                </>
-            )
-        },
-        {
-            field: 'action',
-            headerName: 'Action',
-            width: (1215 * 8 / 100),
-            renderCell: (params) => (
-                <Stack direction="row" spacing={1}>
-                    <Tooltip title="Task View">
-                        <Button sx={{ minWidth: 40 }} onClick={() => navigate(`/ticket/task/${params.row.ticketid}`, { state: { ticketCode: params.row.ticketcode } })} variant="text">⏭</Button>
-                    </Tooltip>
-                    {/* <Tooltip title="Modify Task">
-            <Button sx={{ minWidth: 40, }} onClick={() => alterDailog(true, params.row)} variant="text">✏️</Button>
-          </Tooltip> */}
-                    {/* <Tooltip title="Modify Task">
-            <Button sx={{ minWidth: 40, }} onClick={() => deleteMTask(`${params.row.id}`)} variant="text">🗑️</Button>
-          </Tooltip> */}
-                </Stack>
-            ),
-        },
-    ];
 
 
     const columnsTicket: GridColDef[] = [
@@ -143,9 +79,6 @@ const TabelModel = ({ mid, tType }: Props) => {
             width: (1215 * 10 / 100), disableColumnMenu: true,
             renderCell: (params) => (
                 <Stack direction="row" spacing={0}>
-                    <Tooltip title="Show Task">
-                        <Button sx={{ minWidth: 40 }} onClick={() => navigate(`/ticket/task/${params.row.id}`, { state: { ticketCode: params.row.tickCode } })} variant="text"><ListAltIcon /></Button>
-                    </Tooltip>
                     <Tooltip title="Show Ticket">
                         <Button sx={{ minWidth: 40 }} onClick={() => navigate(`/ticket/${params.row.id}`, { state: { ticketCode: params.row.tickCode } })} variant="text">
                             👁️
@@ -163,26 +96,20 @@ const TabelModel = ({ mid, tType }: Props) => {
     const columnsDeal: GridColDef[] = [
         { field: 'name', headerName: 'Name', width: (1215 * 15 / 100) },
         // { field: 'pipeline', headerName: 'Pipeline', width: (1215 * 10 / 100) },
-        { field: 'organizationName', headerName: 'Organization Name', width: (1215 * 18 / 100) },
-        { field: 'contactName', headerName: 'Contact Name', width: (1215 * 10 / 100) },
-        { field: 'ownerName', headerName: 'Owner Name', width: (1215 * 10 / 100) },
+        { field: 'organizationName', headerName: 'Organization Name', width: (1215 * 25 / 100) },
+        { field: 'contactName', headerName: 'Contact Name', width: (1215 * 15 / 100) }, 
         { field: 'dealTypeName', headerName: 'Deal Type', width: (1215 * 10 / 100) },
         {
-            field: 'stage', headerName: 'Stages', width: (1215 * 18 / 100),
-            renderCell: (params: GridRenderCellParams<TicketView, string>): ReactNode => (
+              field: 'dealstatus',
+              headerName: 'Status',
+              width: (1215 * 15/ 100),
+              renderCell: (params: GridRenderCellParams<TicketView, typeof Statuses[number]['id']>): ReactNode => (
                 <>
-                    {stageStyledMap[params.value ?? '']}
+                  {params.value && StatusTypography[params.value]}
                 </>
-            )
-        },
-        {
-            field: 'priority', headerName: 'Priority', width: (1215 * 10 / 100),
-            renderCell: (params: GridRenderCellParams<TicketView, typeof Priorites[number]['id']>): ReactNode => (
-                <>
-                    {params.value && PrioriteNode[params.value]}
-                </>
-            ),
-        },
+              ),
+              disableColumnMenu: true
+            }, 
         {
             field: 'action',
             headerName: 'Action',
@@ -254,16 +181,13 @@ const TabelModel = ({ mid, tType }: Props) => {
                 url += `/Ticket/ShowTicket?id=0&fromdate=&todate=&pageno=${currPage}&recordperpage=${perPage}&showall=false&query=${query}&dealid=${mid}&cid=${0}`
             }
             else if (tType === "ORG-TIC") {
-                url += `/Tickets/ShowTicket?id=0&fromdate=&todate=&pageno=${currPage}&recordperpage=${perPage}&showall=false&query=${query}&dealid=${0}&orgid=${mid}&cid=${0}`
+                url += `/Ticket/ShowTicket?id=0&fromdate=&todate=&pageno=${currPage}&recordperpage=${perPage}&showall=false&query=${query}&dealid=${0}&orgid=${mid}&cid=${0}`
             }
             else if (tType === "CONTACT-DEAL") {
                 url += `/Deal/ShowDeals?id=0&showdealitem=false&fromdate=&todate=&pageno=${currPage}&recordperpage=${perPage}&showall=false&query=${query}&orgid=${0}&cid=${mid}`
             }
             else if (tType === "CONTACT-TICKET") {
-                url += `/Tickets/ShowTicket?id=0&fromdate=&todate=&pageno=${currPage}&recordperpage=${perPage}&showall=false&query=${query}&dealid=${0}&cid=${mid}`
-            }
-            else if (tType === "ORG-TASK") {
-                url += `/Task/ShowOrgTask?orgid=${mid}&pageno=${currPage}&recordperpage=${perPage}`
+                url += `/Ticket/ShowTicket?id=0&fromdate=&todate=&pageno=${currPage}&recordperpage=${perPage}&showall=false&query=${query}&dealid=${0}&cid=${mid}`
             }
             const req = await myAxios.get(url);
             if (req.status === 200) {
@@ -385,7 +309,7 @@ const TabelModel = ({ mid, tType }: Props) => {
                     paginationModel={paginationModel}
                     onPaginationModelChange={setPaginationModel}
                     disableColumnMenu
-                    columns={(tType === "TICKET" || tType === "CONTACT-TICKET" || tType === "ORG-TIC") ? columnsTicket : (tType === "DEAL" || tType === "CONTACT-DEAL") ? columnsDeal : (tType === "ORG-TASK") ? columnOrgTask : columnsContact}
+                    columns={(tType === "TICKET" || tType === "CONTACT-TICKET" || tType === "ORG-TIC") ? columnsTicket : (tType === "DEAL" || tType === "CONTACT-DEAL") ? columnsDeal : columnsContact}
                     rows={(tType === "TICKET" || tType === "CONTACT-TICKET" || tType === "ORG-TIC") ? list : (tType === "DEAL" || tType === "CONTACT-DEAL") ? list2 : (tType === "ORG-TASK") ? list4 : list3}
                     disableRowSelectionOnClick
                     sx={{
