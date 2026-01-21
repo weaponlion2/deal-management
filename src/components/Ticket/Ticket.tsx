@@ -1,14 +1,13 @@
 import dayjs from 'dayjs';
 import myAxios from '../api';
 import { AxiosError, AxiosResponse } from 'axios';
-import { CancelOutlined, Check } from '@mui/icons-material';
+import { CancelOutlined } from '@mui/icons-material';
 import { green, red } from '@mui/material/colors';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { FIRE, HEADER_FIRE, Response, START_FIRE, START_LOADER } from '../Layout.Interface';
 import { Link as RLink, useLocation, useNavigate, useOutletContext, useParams } from "react-router-dom";
-import { Grid2 as Grid, TextField, Select, MenuItem, InputLabel, FormControl, Button, Typography, Box, SelectChangeEvent, Paper, Divider, FormGroup, Chip, Link, ListItemIcon, Zoom, Fab, IconButton, Tooltip, CircularProgress, Stack } from '@mui/material';
+import { Grid2 as Grid, TextField, Select, MenuItem, InputLabel, FormControl, Button, Typography, Box, SelectChangeEvent, Paper, Divider, Link, Zoom, Fab, IconButton, Tooltip, CircularProgress, Stack } from '@mui/material';
 
-import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import Timeline from '@mui/lab/Timeline';
 import TimelineItem from '@mui/lab/TimelineItem';
 import TimelineSeparator from '@mui/lab/TimelineSeparator';
@@ -20,7 +19,6 @@ import CloseIcon from '@mui/icons-material/Close';
 import TimelineIcon from '@mui/icons-material/Timeline';
 import ContactModal from './ContactModal';
 import OrganizationModal from './OrganizationModal';
-import { VisuallyHiddenInput } from '../Organization/Organization';
 import { SType } from '../Deal/Deal';
 import EmailModal, { IEmailPrep } from '../Other/Email';
 import { TicketView } from './List';
@@ -65,30 +63,20 @@ export interface TicketForm {
     dealId: number;
     createdOn: string;
     pipeline: string;
-    description: string;
+    remark: string;
     source: typeof Sources[number]['id'];
     organizationId: string;
     organizationName: string;
     contactId: string;
     contactName: string;
-    itemType: string;
-    itemId: string;
-    task: string;
-    priority: typeof Priorites[number]['id'];
+    productid: string;
     openDate: string;
     closeDate: string;
     status: typeof Statuses[number]['id'];
-    uidd: string;
-    taskmodel: undefined | TaskForm[],
-    comment: string,
-    tickCode: string | null,
-    serialNo: string,
-    usercmntid: string,
-    refId: number,
-    type: string,
-    file: string,
-    contactFirstName: string,
-    contactLastName: string,
+    userid: string;
+    contactFirstName: string;
+    contactLastName: string;
+    tickCode: string | null;
 }
 
 export interface TaskForm {
@@ -103,29 +91,22 @@ export interface TaskForm {
     name: string,
     cuid: string | null,
     comment: string,
+    tickCode: string,
 }
 
-export interface ErrorForm extends Pick<TicketForm, 'pipeline' | 'itemId' | 'uidd' | 'itemType' | 'organizationId' | 'openDate' | 'contactId'> {
-    task: string,
-    priority: string,
+export interface ErrorForm extends Pick<TicketForm, 'pipeline' | 'productid' | 'organizationId' | 'openDate' | 'contactId'> {
     status: string,
     source: string,
-    type: string,
 }
 
 export const InitialErr: ErrorForm = {
-    itemId: "",
-    itemType: "",
     openDate: "",
     organizationId: "",
-    uidd: "",
     pipeline: "",
     source: "",
-    task: "",
+    productid: "",
     contactId: "",
-    priority: "",
-    status: "",
-    type: ""
+    status: ""
 }
 
 export interface DropdownList {
@@ -149,7 +130,7 @@ export const Priorites = [{ id: "LOW", name: "Low" }, { id: "MEDIUM", name: "Med
 export const Statuses = [{ id: "OPN", name: "OPEN" }, { id: "INP", name: "In Progress" }, { id: "PEN-US", name: "Pending (on us)" }, { id: "PEN-CS", name: "Pending (on customer)" }, { id: "CAN", name: "Cancelled" }, { id: "CLO", name: "Closed" }, { id: "SR", name: "Services" }, { id: "RE", name: "Renewed" }, { id: "WI", name: "Withdrawn" }] as const;
 export type urlType = "pipelines" | "owners" | "organizations" | "contacts" | "itemtypes" | "items" | "statuses" | "priorities" | "tasks" | "dealtypes" | "stages" | "bilingFreqency" | "paymentTerm"
 export type contactType = DropdownOption & { firstName: string, lastName: string }
-export const Sources = [{ id: "CH", name: "Call Helpline" }, { id: "CSP", name: "Call Service Person" }, { id: "EMAIL", name: "Email" }, { id: "WH", name: "Whatsapp Helpline" }, { id: "WSP", name: "Whatsapp Service Person" },] as const;
+export const Sources = [{ id: "CH", name: "Call Helpline" }, { id: "CSP", name: "Call Service Person" }, { id: "EMAIL", name: "Email" }, { id: "WH", name: "Whatsapp Helpline" }, { id: "WSP", name: "Whatsapp Service Person" }, { id: "PM", name: "Primantive Mantainance" }] as const;
 export const FileTypes: DropdownOption[] = [{ id: "SR", name: "Service Report" }, { id: "IR", name: "Installation Report" }, { id: "PIR", name: "Primary Information Report" }] as const;
 
 export const urlList: Record<urlType, string> = {
@@ -204,17 +185,16 @@ export const fetchOptions = async (ntype: urlType, other: string = ""): Promise<
 
 export interface commentForm {
     cid: number,
-    id: number,
-    type: "TASK" | "TICKET",
-    comments: string,
-    createOn: string,
-    userName: string,
+    refid: number,
+    reftype: "DEAL" | "TICKET",
+    comments: string, 
+    userName?: string,
+    createOn?: string,
     isactive: boolean,
     uid: number
 }
 
 export interface NView {
-    amount: string;
     contactId: number;
     dealId: number;
     organizationId: number;
@@ -234,7 +214,7 @@ export interface NView {
 
 export const CommentLine = ({ comments, toggleDrawer, id, selected }: { comments: commentForm[], toggleDrawer: () => void, id?: string, selected?: boolean }) => {
     return (
-        <Box sx={{ height: 600, maxHeight: 600 }}>
+        <Box sx={{ height: 400, maxHeight: 400 }}>
             <Box display="flex" justifyContent="space-between" alignItems={"center"} paddingY={1} paddingX={1}>
                 <Typography variant="h5" align="left" >
                     Comment History {id && ` - ${id}`}
@@ -279,9 +259,9 @@ export const CommentLine = ({ comments, toggleDrawer, id, selected }: { comments
 }
 
 
-export const fetchComment = async <T extends commentForm>(id: string, type?: "TICKET" | "TASK" | "DEALS", cid?: string): Promise<T[]> => {
+export const fetchComment = async <T extends commentForm>(cid: string, type?: "TICKET" | "DEAL", refid?: string): Promise<T[]> => {
     try {
-        const req: AxiosResponse = await myAxios(`/TicketComments/ShowTicketComments?cid=${cid ?? 0}&id=${id}&type=${type ?? "TICKET"}`);
+        const req: AxiosResponse = await myAxios(`/Comment/showcomment?commentid=${cid ?? 0}&refid=${refid}&reftype=${type ?? "TICKET"}`);
         if (req.status === 200) {
             const { status, data }: Response<T[]> = req.data;
             if (status === "Success") {
@@ -305,40 +285,33 @@ const CreateTicketPage: React.FC = () => {
     //  console.log("AAA RAHA HU MI ", uid)
     const logedUser: string = localStorage.getItem("@Id") ?? "-1";
     const location = useLocation();
-    const navigateData: NView | null = location.state;
-    const [taskSet, setTaskSet] = useState<Set<string>>(new Set());
+    const navigateData: NView | null = location.state; 
     const { startFir, setUpHeader, startLoader } = useOutletContext<{ startFir: FIRE; setUpHeader: HEADER_FIRE, startLoader: START_LOADER }>();
     const [ticketData, setTicketData] = useState<TicketForm>({
         id: 0,
         dealId: 0,
         createdOn: '',
         pipeline: '-1',
-        description: '',
+        remark: '',
         source: 'CSP',
         organizationId: '0',
-        contactId: '0',
-        itemType: '-1',
-        itemId: '-1',
-        task: "-1",
-        priority: 'MEDIUM',
+        contactId: '0', 
+        productid: '-1', 
         openDate: dayjs().format("YYYY-MM-DDTHH:mm"),
         closeDate: '',
         status: 'OPN',
-        uidd: "-1",
-        usercmntid: "-1",
-        taskmodel: undefined,
-        comment: "",
-        serialNo: "",
+        userid: logedUser,
         tickCode: null,
-        refId: uid ? Number(uid) : 0,
-        type: "-1",
-        file: "",
         contactName: "",
         organizationName: "",
         contactFirstName: "",
         contactLastName: ""
     });
-
+    const oriRef = useRef<HTMLDivElement | null>(null);
+    const conRef = useRef<HTMLDivElement | null>(null);
+    const [loader, setLoader] = useState<boolean>(false);
+    const [searchOrigan, setSearchOrigan] = useState<boolean>(false);
+    const [searchCont, setSearchCont] = useState<boolean>(false);
     const [emailData, setEmailData] = useState<IEmailPrep>({
         closeDate: "",
         description: "",
@@ -354,7 +327,6 @@ const CreateTicketPage: React.FC = () => {
         type: "TICKETOPEN"
     });
     const [commentList, setCommentList] = useState<commentForm[]>([]);
-    const [taskData, setTaskData] = useState<TaskForm[]>([]);
     const [warningList, setWarningList] = useState<ErrorForm>(InitialErr);
 
     const [open, setOpen] = useState<boolean>(false);
@@ -433,7 +405,6 @@ const CreateTicketPage: React.FC = () => {
                     }
                 })
                 if (navigateData !== null) {
-                    console.log("Mai Hu naak mai dm")
                     const tasks: DropdownOption[] = await fetchOptions("tasks", navigateData.itemType);
                     const items: DropdownOption[] = await fetchOptions("items", navigateData.itemType ? navigateData?.itemType : navigateData?.pipeline);
                     setDropdownOptions((dropdownOptions) => ({ ...dropdownOptions, items: items, tasks: tasks }));
@@ -471,9 +442,7 @@ const CreateTicketPage: React.FC = () => {
     const handleSelectChange = async (e: SelectChangeEvent<string>, field: string) => {
         const val: string = `${e.target.value}`;
         if (val === "-2") return;
-        if (field === "itemType") {
-            setTaskData([])
-            setTaskSet(new Set())
+        if (field === "itemType") {  
             setTicketData((ticketData) => ({ ...ticketData, itemId: '-1', itemType: val, task: "-1" }))
             if (val === "-1") {
                 setDropdownOptions((dropdownOptions) => ({ ...dropdownOptions, items: [], tasks: [] }));
@@ -483,51 +452,6 @@ const CreateTicketPage: React.FC = () => {
                 const tasks: DropdownOption[] = await fetchOptions("tasks", val);
                 setDropdownOptions((dropdownOptions) => ({ ...dropdownOptions, items: items, tasks: tasks }));
             }
-        }
-        else if (field === "task") {
-
-            const vl = val.split("+");
-            // console.log("OSLSL",vl)
-            if (vl[0] === "-1") return;
-
-            setTaskData((taskData) => {
-                // console.log(taskData)
-                const tasks: TaskForm[] = [];
-                let available: boolean = false;
-                for (let i = 0; i < taskData.length; i++) {
-                    if (`${taskData[i].taskMasterId}` === vl[0]) {
-                        available = true;
-                    } else tasks.push(taskData[i]);
-                }
-                if (!available) {
-                    tasks.push({
-                        id: 0,
-                        description: ticketData.description,
-                        userid: ticketData.uidd,
-                        status: ticketData.status,
-                        endDate: "",
-                        startDate: ticketData.openDate,
-                        ticketId: 0,
-                        taskMasterId: vl[0] as unknown as number,
-                        name: vl[1],
-                        cuid: "0",
-                        comment: "",
-                    })
-                }
-                console.log(tasks,vl[0])
-                return tasks;
-            })
-
-
-            setTaskSet((prevSet) => {
-                const newSet = new Set(prevSet);
-                if (prevSet.has(vl[0])) {
-                    newSet.delete(vl[0]);
-                } else {
-                    newSet.add(vl[0]);
-                }
-                return newSet;
-            })
         }
         else {
             setTicketData((prevData) => ({
@@ -555,25 +479,11 @@ const CreateTicketPage: React.FC = () => {
         }
     };
 
-    function removeTask(taskMasterId: number): void {
-        setTaskData((taskData) => taskData.filter((task) => task.taskMasterId !== taskMasterId));
-        setTaskSet((prevSet) => {
-            const newSet = new Set(prevSet);
-            if (prevSet.has(`${taskMasterId}`)) {
-                newSet.delete(`${taskMasterId}`);
-            } else {
-                newSet.add(`${taskMasterId}`);
-            }
-            return newSet;
-        })
-    }
-
     const handleSubmit = async () => {
         // Handle the form submission
         startLoader(true)
-        const taskmodel = taskData.map((v) => ({ ...v, id: 0, uidd: ticketData.uidd, description: ticketData.description, status: ticketData.status }));
         if (validateInput() === true) {
-            const response: AxiosResponse = await myAxios.post(`/Tickets/SaveTicket`, { ...ticketData, openDate: isValidDate(ticketData.openDate) === true ? ticketData.openDate : "", closeDate: isValidDate(ticketData.closeDate) === true ? ticketData.closeDate : ticketData.status === "CLO" ? dayjs().format("YYYY-MM-DDTHH:mm") : "", taskmodel: taskmodel, usercmntid: logedUser, });
+            const response: AxiosResponse = await myAxios.post(`/Ticket/SaveTicket`, { ...ticketData, openDate: isValidDate(ticketData.openDate) === true ? ticketData.openDate : "", closeDate: isValidDate(ticketData.closeDate) === true ? ticketData.closeDate : ticketData.status === "CLO" ? dayjs().format("YYYY-MM-DDTHH:mm") : "" });
             try {
                 const { data, status }: Response<TicketView[]> = response.data;
                 if (status === "Success") {
@@ -583,49 +493,8 @@ const CreateTicketPage: React.FC = () => {
                             msg: "Ticket save successfully",
                             type: "S"
                         })
-
                         if (ticketData.status === "OPN" || ticketData.status === "CLO") {
-                            const ContactIndex = dropdownOptions.contacts.findIndex((v) => v.id == ticketData.contactId)
-                            // console.log({ ContactIndex })
-                            // console.log({ d: ticketData.contactId })
-                            // console.log({ d: dropdownOptions.contacts })
-
-                            if (ContactIndex !== -1) {
-                                const email = dropdownOptions.contacts[ContactIndex]['email'] ?? "";
-                                if (email !== "") {
-                                    const OriIndex = dropdownOptions.organizations.findIndex((v) => v.id == ticketData.organizationId)
-                                    const ItemIndex = dropdownOptions.items.findIndex((v) => v.id == ticketData.itemId)
-                                    const OwnerIndex = dropdownOptions.owners.findIndex((v) => v.id == ticketData.uidd)
-
-                                    setEmailData((pre) => ({
-                                        ...pre,
-                                        closeDate: nData.closeDate,
-                                        description: ticketData.description,
-                                        openDate: nData.createdOn,
-                                        serialNo: ticketData.serialNo,
-                                        tickCode: nData.tickCode ?? "",
-                                        type: ticketData.status === "OPN" ? "TICKETOPEN" : "TICKETCLOSE",
-
-                                        productName: dropdownOptions.items[ItemIndex]?.name ?? "",
-
-                                        ownerName: dropdownOptions.owners[OwnerIndex]?.name ?? "",
-                                        ownerEmail: dropdownOptions.owners[OwnerIndex]?.email ?? "",
-
-                                        organizationLocation: dropdownOptions.organizations[OriIndex]?.address ?? "",
-                                        organizationName: dropdownOptions.organizations[OriIndex]?.name ?? "",
-                                        contactEmail: email,
-                                    }))
-
-                                    handleEmailModel(true)
-                                }
-                                else {
-                                    handleNavigate("/tickets")
-                                }
-
-                            }
-                            else {
-                                handleNavigate("/tickets")
-                            }
+                            handleNavigate("/tickets")
                         }
                         else {
                             handleNavigate("/tickets")
@@ -665,20 +534,8 @@ const CreateTicketPage: React.FC = () => {
             errList.source = "Source is required."
             isValid = false;
         }
-        if (!ticketData.itemType || ticketData.itemType === '-1') {
-            errList.itemType = "Item Type is required."
-            isValid = false;
-        }
-        if (!ticketData.itemId || ticketData.itemId === '-1') {
-            errList.itemId = "Item is required."
-            isValid = false;
-        }
-        if (taskData.length < 1) {
-            errList.task = "Please select atleast one task."
-            isValid = false;
-        }
-        if (!ticketData.priority) {
-            errList.priority = "Priority is required."
+        if (!ticketData.productid || ticketData.productid === '-1') {
+            errList.productid = "Product is required."
             isValid = false;
         }
         if (!ticketData.openDate) {
@@ -692,16 +549,12 @@ const CreateTicketPage: React.FC = () => {
             errList.status = "Status is required."
             isValid = false;
         }
-        if (!ticketData.uidd || ticketData.uidd === '-1') {
-            errList.uidd = "Owner is required."
-            isValid = false;
-        }
-        if (ticketData.file && ticketData.file != "") {
-            if (!ticketData.type || ticketData.type === '-1') {
-                errList.type = "File Type is required."
-                isValid = false;
-            }
-        }
+        // if (ticketData.file && ticketData.file != "") {
+        //     if (!ticketData.type || ticketData.type === '-1') {
+        //         errList.type = "File Type is required."
+        //         isValid = false;
+        //     }
+        // }
         if (!isValid) {
             startFir({
                 msg: "Please fill up all required field.",
@@ -714,19 +567,15 @@ const CreateTicketPage: React.FC = () => {
 
     const getData = useCallback(async (uid: string) => {
         try { //2024-12-20
-            const req = await myAxios.get(`/Tickets/ShowTicket?id=${uid}&fromdate=&todate=&pageno=0&recordperpage=0&showall=true&showTask=true`);
+            const req = await myAxios.get(`/Ticket/ShowTicket?id=${uid}&fromdate=&todate=&pageno=0&recordperpage=0&showall=true&showComment=false&dealid=0&cid=0&orgid=0&isopen=true`);
             if (req.status === 200) {
                 const { data, status }: Response<TicketForm[]> = req.data;
                 if (status === "Success") {
-                    if (typeof data !== "undefined") {
-                        const items: DropdownOption[] = await fetchOptions("items", data[0]['itemType']);
-                        const tasks: DropdownOption[] = await fetchOptions("tasks", data[0]['itemType']);
-                        setDropdownOptions((dropdownOptions) => ({ ...dropdownOptions, items: items, tasks: tasks }));
-                        setTicketData({ ...data[0], openDate: dayjs(data[0]['openDate']).format("YYYY-MM-DDTHH:mm"), itemType: `${data[0]['itemType']}`, task: "-1", closeDate: data[0]['closeDate'] !== "" ? dayjs(data[0]['closeDate']).format("YYYY-MM-DDTHH:mm") : "", file: "", type: "-1", usercmntid: logedUser, comment: "", contactName: `${data[0]['contactFirstName']} ${data[0]['contactLastName']}` })
-                        if (data[0]['taskmodel']) {
-                            setTaskData(data[0]['taskmodel']);
-                            setTaskSet(new Set<string>(data[0]['taskmodel'].map((v) => `${v.taskMasterId}`)))
-                        }
+                    const pTicketData = data && data.length > 0 ? data[0] : null;
+                    if (pTicketData) {
+                        const items: DropdownOption[] = await fetchOptions("items", pTicketData['pipeline']);
+                        setDropdownOptions((dropdownOptions) => ({ ...dropdownOptions, items: items }));
+                        setTicketData({ ...pTicketData, openDate: dayjs(pTicketData['openDate']).format("YYYY-MM-DDTHH:mm"), closeDate: pTicketData['closeDate'] !== "" ? dayjs(pTicketData['closeDate']).format("YYYY-MM-DDTHH:mm") : "", userid: logedUser, contactName: `${pTicketData['contactFirstName']} ${pTicketData['contactLastName']}` })
                         getHistory(uid)
                     }
                 }
@@ -793,15 +642,6 @@ const CreateTicketPage: React.FC = () => {
         }
     };
 
-    const handleReset = () => {
-        setTicketData((prevData) => ({
-            ...prevData,
-            file: "",
-            refId: 0,
-        }));
-    }
-
-
     const getSearch = async (val: string, type: SType) => {
         setLoader(true)
         try { //2024-12-20
@@ -827,9 +667,7 @@ const CreateTicketPage: React.FC = () => {
         }
         setLoader(false)
     }
-    const [loader, setLoader] = useState<boolean>(false);
-    const [searchOrigan, setSearchOrigan] = useState<boolean>(false);
-    const [searchCont, setSearchCont] = useState<boolean>(false);
+
     const handleSearch = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>, type: SType) => {
         if (type === "ORGANIZATION") {
             setTicketData((tData) => ({ ...tData, organizationName: e.target.value }))
@@ -860,8 +698,6 @@ const CreateTicketPage: React.FC = () => {
         setSearchCont(false)
         setSearchOrigan(false)
     }
-    const oriRef = useRef<HTMLDivElement | null>(null);
-    const conRef = useRef<HTMLDivElement | null>(null);
 
     const handleClickOutside = (event: MouseEvent) => {
         if (event.target !== null) {
@@ -881,9 +717,6 @@ const CreateTicketPage: React.FC = () => {
             document.removeEventListener("mousedown", handleClickOutside);
         };
     }, []);
-
-   
-
 
     const handleResetOri = (type: SType) => {
         if (type === "ORGANIZATION") {
@@ -921,10 +754,6 @@ const CreateTicketPage: React.FC = () => {
         }
     }
 
-    // console.log("TICKET DATA", ticketData)
-    // console.log("Naviagat DATA", dropdownOptions?.items)
-    // console.log("mai Hu tasjseet",taskSet,taskData)
-
     return (
         <Paper>
             <Box display="flex" justifyContent="space-between" paddingY={1} paddingX={2}>
@@ -953,7 +782,7 @@ const CreateTicketPage: React.FC = () => {
                     <Grid container spacing={3} padding={2}>
 
                         {/* Pipeline Dropdown */}
-                        <Grid size={{ xs: 12, sm: 4 }} >
+                        <Grid size={{ xs: 12, sm: 6 }} >
                             <FormControl size='small' fullWidth>
                                 <InputLabel error={warningList.pipeline !== "" ? true : false}>Pipeline <span style={{ color: "red" }}>*</span></InputLabel>
                                 <Select
@@ -967,30 +796,7 @@ const CreateTicketPage: React.FC = () => {
                                         {dropdownOptions.pipelines.length === 0 ? "No Pipelines" : "Choose Pipeline"}
                                     </MenuItem>
                                     {dropdownOptions.pipelines.map((option) => (
-                                        <MenuItem key={option.id} value={option.id}>
-                                            {option.name}
-                                        </MenuItem>
-                                    ))}
-                                </Select>
-                            </FormControl>
-                        </Grid>
-
-                        {/* Owner Dropdown */}
-                        <Grid size={{ xs: 12, sm: 4 }} >
-                            <FormControl size='small' fullWidth>
-                                <InputLabel error={warningList.uidd !== "" ? true : false}>Owner <span style={{ color: "red" }}>*</span></InputLabel>
-                                <Select
-                                    value={ticketData.uidd}
-                                    onChange={(e) => handleSelectChange(e, 'uidd')}
-                                    label="Owner *"
-                                    size='small'
-                                    error={warningList.uidd !== "" ? true : false}
-                                >
-                                    <MenuItem value={-1}>
-                                        {dropdownOptions.owners.length === 0 ? "No Owners" : "Choose Owner"}
-                                    </MenuItem>
-                                    {dropdownOptions.owners.map((option) => (
-                                        <MenuItem key={option.id} value={option.id}>
+                                        <MenuItem key={option.id} value={option.name}>
                                             {option.name}
                                         </MenuItem>
                                     ))}
@@ -999,7 +805,7 @@ const CreateTicketPage: React.FC = () => {
                         </Grid>
 
                         {/* Source Dropdown */}
-                        <Grid size={{ xs: 12, sm: 4 }} >
+                        <Grid size={{ xs: 12, sm: 6 }} >
                             <FormControl size='small' fullWidth>
                                 <InputLabel error={warningList.source !== "" ? true : false}>Source <span style={{ color: "red" }}>*</span></InputLabel>
                                 <Select
@@ -1107,67 +913,8 @@ const CreateTicketPage: React.FC = () => {
                                 )}
                             </Paper>
                         </Grid>
-                        {/* <Grid size={{ xs: 12, sm: 6 }} sx={{ position: "relative" }} >
-                            <TextField
-                                label="Organization"
-                                value={ticketData.organizationName ?? ""}
-                                onChange={(e) => handleSearch(e, "ORGANIZATION")}
-                                placeholder='Search Organization...'
-                                size='small'
-                                name='searhbar'
-                                type='text'
-                                fullWidth
-                                onFocus={() => setSearchOrigan(true)}
-                                slotProps={{
-                                    input: {
-                                        name: `${"oiuy" + Math.random()}`
-                                    },
-                                }}
-                            />
-                            <Paper ref={oriRef} tabIndex={-1} onMouseEnter={() => setSearchOrigan(true)} sx={{ position: "absolute", right: 0, top: 40, zIndex: 111, width: "100%", borderRadius: 1, display: searchOrigan ? "block" : "none", maxHeight: 200, overflow: "auto" }}>
-                                <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                                    <Typography variant='caption' fontSize={15} p={1} px={2}>List of Organization</Typography>
-                                    <IconButton tabIndex={-1} onClick={() => { setSearchOrigan(false); }}><CancelOutlined /></IconButton>
-                                </Box>
-                                <MenuItem value={-2} sx={{ color: green[600] }} onClick={() => handleOrganizationModel(true)}>
-                                    {"New Organization"}
-                                </MenuItem>
-                                <MenuItem sx={{ color: red[600] }} value={-2} onClick={() => handleResetOri("ORGANIZATION")}>
-                                    {"Reset Organization"}
-                                </MenuItem>
-                                <Divider />
-                                {
-                                    dropdownOptions.organizations.map((v) => (
-                                        <MenuItem color='primary' key={v.id} onClick={() => changeData(`${v.id}`, v.name, "ORGANIZATION")} >
-                                            <Box sx={{ display: "flex", justifyContent: "space-between", width: "100%", alignItems: "center" }}>
-                                                <Box sx={{ display: "flex" }}>
-                                                    <Typography>{v.name}</Typography>
-                                                </Box>
-                                            </Box>
-                                        </MenuItem>
-                                    ))
-                                }
-                                {
-                                    dropdownOptions.organizations.length === 0 && loader && (
-                                        <MenuItem color='primary' sx={{ display: "flex", justifyContent: "center" }}>
-                                            <CircularProgress />
-                                        </MenuItem>)
-                                }
-                                {
-                                    dropdownOptions.organizations.length === 0 && loader === false && (
-                                        <>
-                                            <MenuItem color='primary'>
-                                                <Typography width={"100%"}>No organization found </Typography>
-                                            </MenuItem>
-                                        </>
-                                    )
-                                }
-
-                            </Paper>
-                        </Grid> */}
 
                         {/* Contact Dropdown */}
-
                         <Grid size={{ xs: 12, sm: 6 }} sx={{ position: "relative", width: '48%' }} >
                             <Box sx={{ display: "flex", alignItems: "center" }}>
                                 {/* Input takes full width minus button space */}
@@ -1258,99 +1005,32 @@ const CreateTicketPage: React.FC = () => {
                                 )}
                             </Paper>
                         </Grid>
-                        {/* <Grid size={{ xs: 12, sm: 6 }} sx={{ position: "relative" }}  >
-                            <TextField
-                                label="Contact"
-                                value={ticketData.contactName ?? ""}
-                                onChange={(e) => handleSearch(e, "CONTACT")}
-                                placeholder='Search Organization...'
-                                size='small'
-                                name='searhbar'
-                                type='text'
-                                fullWidth
-                                onFocus={() => {setSearchCont(true); handleFocus("ORGANIZATION")}}
-                                slotProps={{
-                                    input: {
-                                        name: `${"oidf" + Math.random()}`
-                                    },
-                                }}
-                            />
 
-                            <Paper ref={conRef} tabIndex={-1} onMouseEnter={() => setSearchCont(true)} sx={{ position: "absolute", right: 0, top: 40, zIndex: 111, width: "100%", borderRadius: 1, display: searchCont ? "block" : "none", maxHeight: 200, overflow: "auto" }}>
-                                <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                                    <Typography variant='caption' fontSize={15} p={1} px={2}>List of Contact</Typography>
-                                    <IconButton tabIndex={-1} onClick={() => { setSearchCont(false); }}><CancelOutlined /></IconButton>
-                                </Box>
-                                <MenuItem sx={{ color: green[600] }} value={-2} onClick={() => handleContactModel(true)}>
-                                    {"New Contact"}
-                                </MenuItem>
-                                <MenuItem sx={{ color: red[600] }} value={-2} onClick={() => handleResetOri("CONTACT")}>
-                                    {"Reset Contact"}
-                                </MenuItem>
-                                <Divider />
-                                {
-                                    dropdownOptions.contacts.map((v) => (
-                                        <MenuItem color='primary' key={v.id} onClick={() => changeData(`${v.id}`, v.name, "CONTACT")} >
-                                            <Box sx={{ display: "flex", justifyContent: "space-between", width: "100%", alignItems: "center" }}>
-                                                <Box sx={{ display: "flex" }}>
-                                                    <Typography>{v.name}</Typography>
-                                                </Box>
-                                            </Box>
-                                        </MenuItem>
-                                    ))
-                                }
-                                {
-                                    dropdownOptions.contacts.length === 0 && loader && (
-                                        <MenuItem color='primary' sx={{ display: "flex", justifyContent: "center" }}>
-                                            <CircularProgress />
-                                        </MenuItem>)
-                                }
-                                {
-                                    dropdownOptions.contacts.length === 0 && loader === false && (
-                                        <>
-                                            <MenuItem color='primary'>
-                                                <Typography width={"100%"}>No contact found </Typography>
-                                            </MenuItem>
-                                        </>
-                                    )
-                                }
-
-                            </Paper>
-                        </Grid> */}
-
-                        {/* Priority Dropdown */}
-                        <Grid size={{ xs: 12, sm: 3 }} >
+                        {/* Product Dropdown */}
+                        <Grid size={{ xs: 12, sm: 6 }} >
                             <FormControl size='small' fullWidth>
-                                <InputLabel>Priority</InputLabel>
+                                <InputLabel error={warningList.productid !== "" ? true : false}>Product <span style={{ color: "red" }}>*</span></InputLabel>
                                 <Select
-                                    onFocus={() => { handleFocus("CONTACT") }}
-                                    value={ticketData.priority}
-                                    onChange={(e) => handleSelectChange(e, 'priority')}
-                                    label="Priority"
+                                    value={ticketData.productid}
+                                    onChange={(e) => handleSelectChange(e, 'productid')}
+                                    label="Product *"
                                     size='small'
+                                    error={warningList.productid !== "" ? true : false}
                                 >
                                     <MenuItem value={-1}>
-                                        {dropdownOptions.priorities.length === 0 ? "No Priorites" : "Choose Priority"}
+                                        {((typeof ticketData.pipeline === "number" && ticketData.pipeline === -1) || ticketData.pipeline === "-1") ? "Choose Pipeline first" : (dropdownOptions.items.length === 0 ? "No Product" : "Choose Product")}
                                     </MenuItem>
-                                    {dropdownOptions.priorities.map((option) => (
+                                    {dropdownOptions.items.map((option) => (
                                         <MenuItem key={option.id} value={option.id}>
                                             {option.name}
                                         </MenuItem>
                                     ))}
                                 </Select>
                             </FormControl>
-                            {warningList.priority && (
-                                <Typography
-                                    variant="button"
-                                    sx={{ display: "block", textAlign: "right", color: "red" }}
-                                >
-                                    {warningList.priority}
-                                </Typography>
-                            )}
                         </Grid>
-
+                        
                         {/* Status Dropdown */}
-                        <Grid size={{ xs: 12, sm: 3 }} >
+                        <Grid size={{ xs: 12, sm: 6 }} >
                             <FormControl size='small' fullWidth>
                                 <InputLabel>Status</InputLabel>
                                 <Select
@@ -1380,8 +1060,9 @@ const CreateTicketPage: React.FC = () => {
                         </Grid>
 
                         {/* Opening Date */}
-                        <Grid size={{ xs: 12, sm: 3 }} >
+                        <Grid size={{ xs: 12, sm: 6 }} >
                             <TextField
+                                disabled
                                 label="Opening Date"
                                 type="datetime-local"
                                 size='small'
@@ -1404,7 +1085,7 @@ const CreateTicketPage: React.FC = () => {
                         </Grid>
 
                         {/* Closing Date */}
-                        <Grid size={{ xs: 12, sm: 3 }} >
+                        <Grid size={{ xs: 12, sm: 6 }} >
                             <TextField
                                 label="Closing Date"
                                 size='small'
@@ -1424,132 +1105,7 @@ const CreateTicketPage: React.FC = () => {
                             />
                         </Grid>
 
-                        {/* Item Type Dropdown */}
-                        <Grid size={{ xs: 12, sm: 4 }} >
-                            <FormControl size='small' fullWidth>
-                                <InputLabel error={warningList.itemType !== "" ? true : false}>Item Type <span style={{ color: "red" }}>*</span></InputLabel>
-                                <Select
-                                    value={ticketData.itemType}
-                                    onChange={(e) => handleSelectChange(e, 'itemType')}
-                                    label="Item Type *"
-                                    size='small'
-                                    {...(uid ? { disabled: true } : { disabled: false })}
-                                    error={warningList.itemType !== "" ? true : false}
-                                >
-                                    <MenuItem value={-1}>
-                                        {dropdownOptions.itemTypes.length === 0 ? "No Itemtypes" : "Choose Itemtype"}
-                                    </MenuItem>
-                                    {dropdownOptions.itemTypes.map((option) => (
-                                        <MenuItem key={option.id} value={`${option.itemtypename}`}>
-                                            {option.itemtypename}
-                                        </MenuItem>
-                                    ))}
-                                </Select>
-                            </FormControl>
-                        </Grid>
-
-                        {/* Item Dropdown */}
-                        <Grid size={{ xs: 12, sm: 4 }} >
-                            <FormControl size='small' fullWidth>
-                                <InputLabel error={warningList.itemId !== "" ? true : false}>Item <span style={{ color: "red" }}>*</span></InputLabel>
-                                <Select
-                                    value={ticketData.itemId}
-                                    onChange={(e) => handleSelectChange(e, 'itemId')}
-                                    label="Item *"
-                                    size='small'
-                                    error={warningList.itemId !== "" ? true : false}
-                                >
-                                    <MenuItem value={-1}>
-                                        {((typeof ticketData.itemType === "number" && ticketData.itemType === -1) || ticketData.itemType === "-1") ? "Choose Itemtype first" : (dropdownOptions.items.length === 0 ? "No Items" : "Choose Item")}
-                                    </MenuItem>
-                                    {dropdownOptions.items.map((option) => (
-                                        <MenuItem key={option.id} value={option.id}>
-                                            {option.name}
-                                        </MenuItem>
-                                    ))}
-                                </Select>
-                            </FormControl>
-                        </Grid>
-
-                        {/* Task Dropdown */}
-                        <Grid size={{ xs: 12, sm: 4 }} >
-                            <FormControl size='small' fullWidth>
-                                <InputLabel>Task</InputLabel>
-                                <Select
-                                    value={ticketData.task}
-                                    onChange={(e) => handleSelectChange(e as SelectChangeEvent<string>, 'task')}
-                                    label="Task"
-                                    size='small'
-                                    error={warningList.task !== "" ? true : false}
-                                >
-                                    <MenuItem value={-1}>
-                                        {((typeof ticketData.itemType === "number" && ticketData.itemType === -1) || ticketData.itemType === "-1") ? "Choose Itemtype first" : (dropdownOptions.tasks.length === 0 ? "No Tasks" : "Choose Task")}
-                                    </MenuItem>
-                                    {dropdownOptions.tasks.map((option) => (
-                                        <MenuItem sx={{ justifyContent: "space-between" }} key={option.id} value={`${option.id}+${option.name}`}>
-                                            {option.name}
-                                            {
-                                                taskSet.has(`${option.id}`) && (
-                                                    <ListItemIcon>
-                                                        <Check />
-                                                    </ListItemIcon>
-                                                )
-                                            }
-                                        </MenuItem>
-                                    ))}
-                                </Select>
-                            </FormControl>
-                        </Grid>
-
-                        {/* Serial Number */}
-                        <Grid size={{ xs: 12, sm: 6 }}>
-                            <TextField
-                                label="Serial Number"
-                                fullWidth
-                                value={ticketData.serialNo ?? ""}
-                                onChange={handleInputChange}
-                                name="serialNo"
-                                size='small'
-                            />
-                        </Grid>
-
-                        {/* Comment */}
-                        <Grid size={{ xs: 12, sm: 6 }}>
-                            <TextField
-                                label="Comment"
-                                fullWidth
-                                value={ticketData.comment ?? ""}
-                                onChange={handleInputChange}
-                                name="comment"
-                                size='small'
-                            />
-                        </Grid>
-
-
-                        <Grid size={{ xs: 12, sm: 6 }}>
-                            <FormControl size='small' fullWidth>
-                                <InputLabel>File Type {ticketData.file !== "" && <span style={{ color: 'red' }}> *</span>}</InputLabel>
-                                <Select
-                                    value={ticketData.type}
-                                    onChange={(e) => handleSelectChange(e, 'type')}
-                                    label={<>File Type {ticketData.file !== "" && <> *</>} </>}
-                                    size='small'
-                                    error={warningList.type !== "" ? true : false}
-                                >
-                                    <MenuItem value={"-1"}>
-                                        {"Choose File Type"}
-                                    </MenuItem>
-                                    {dropdownOptions.filetypes.map((option) => (
-                                        <MenuItem key={option.id} value={option.id}>
-                                            {option.name}
-                                        </MenuItem>
-                                    ))}
-                                </Select>
-                            </FormControl>
-
-                        </Grid>
-
-                        <Grid size={{ xs: 12, sm: 6 }} sx={{ display: "flex", gap: 2, alignItems: "center" }} >
+                        {/* <Grid size={{ xs: 12, sm: 6 }} sx={{ display: "flex", gap: 2, alignItems: "center" }} >
                             <Box sx={{ p: 0, m: 0 }}>
                                 <Button
                                     component="label"
@@ -1570,57 +1126,18 @@ const CreateTicketPage: React.FC = () => {
                             <Typography variant='overline' fontSize={13} >{ticketData.file !== "" && "File selected..."}</Typography>
                             <Typography variant='overline' color='error' sx={{ cursor: "pointer", fontSize: 13, fontWeight: "700" }} onClick={handleReset} >{ticketData.file !== "" && "Reset File"}</Typography>
 
-                        </Grid>
-
-                        {/* {selected task} */}
-                        <Grid size={{ xs: 12, sm: 12 }} >
-                            <TextField
-                                label={`Seleted Task (${taskData.length})`}
-                                variant="outlined"
-                                fullWidth
-                                size='small'
-                                disabled
-                                InputProps={{
-                                    startAdornment: (
-                                        <FormGroup sx={{ py: 1, gap: 1, flexDirection: "row", minWidth: "100%" }}>
-                                            {taskData.map((v) => (
-                                                <Chip
-                                                    key={v.taskMasterId}
-                                                    label={v.name}
-                                                    // onClick={handleClick}
-                                                    onDelete={() => removeTask(v.taskMasterId)}
-                                                />
-                                            ))}
-                                        </FormGroup>
-                                    ),
-                                }}
-                                sx={{
-                                    '& .MuiInputBase-root': {
-                                        padding: 1,
-                                    },
-                                    '& .MuiOutlinedInput-root': {
-                                        borderColor: 'gray',
-                                        borderRadius: 1,
-                                    },
-                                }}
-                            />
-                            {warningList.task && (
-                                <Typography variant="button" sx={{ display: "block", textAlign: "right", color: "red", fontSize: 13 }}>
-                                    {warningList.task}
-                                </Typography>
-                            )}
-                        </Grid>
+                        </Grid> */}
 
                         {/* Description */}
                         <Grid size={{ xs: 12, sm: 12 }}>
                             <TextField
-                                label="Description"
+                                label="Remark"
                                 fullWidth
                                 multiline
                                 rows={2}
-                                value={ticketData.description}
+                                value={ticketData.remark}
                                 onChange={handleInputChange}
-                                name="description"
+                                name="remark"
                             />
                         </Grid>
 

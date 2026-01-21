@@ -1,5 +1,0 @@
-D:\Projects\CustomerManagementSystem\customermanagementsystem.client\obj\Debug\customermanagementsystem.client.esproj.CoreCompileInputs.cache
-F:\CustomerManagementSystem\customermanagementsystem.client\obj\Debug\customermanagementsystem.client.esproj.CoreCompileInputs.cache
-Z:\CustomerManagementSystem\customermanagementsystem.client\obj\Debug\customermanagementsystem.client.esproj.CoreCompileInputs.cache
-Z:\Projects\HealthCare\customermanagementsystem.client\obj\Debug\customermanagementsystem.client.esproj.CoreCompileInputs.cache
-F:\Projects\HealthCare\customermanagementsystem.client\obj\Debug\customermanagementsystem.client.esproj.CoreCompileInputs.cache

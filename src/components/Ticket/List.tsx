@@ -3,13 +3,12 @@ import { ReactNode, useCallback, useEffect, useState } from 'react';
 import { DataGrid, GridColDef, GridRenderCellParams } from '@mui/x-data-grid';
 import { FIRE, HEADER_FIRE, Response, START_FIRE, START_LOADER } from '../Layout.Interface';
 import { NavigateOptions, Link as RLink, useNavigate, useOutletContext } from "react-router-dom";
-import { DropdownOption, fetchOptions, Priorites, Statuses, TicketForm } from './Ticket';
+import { DropdownOption, Priorites, Statuses, TicketForm } from './Ticket';
 import { Box, Button, Chip, Link, Paper, Stack, TextField, Tooltip, Typography } from '@mui/material';
 import dayjs from 'dayjs';
 import ListAltIcon from '@mui/icons-material/ListAlt';
 import { AxiosError } from 'axios';
-import ExportModal from './ExportModal';
-import { IDealDropdown } from '../Deal/Deal';
+import ExportModal from './ExportModal'; 
 
 export interface TicketView {
   id: number;
@@ -137,10 +136,7 @@ export default function TiketList() {
       headerName: 'Action',
       width: (1215 * 10 / 100), disableColumnMenu: true,
       renderCell: (params) => (
-        <Stack direction="row" spacing={0}>
-          <Tooltip title="Show Task">
-            <Button sx={{ minWidth: 40 }} onClick={() => handleNavigate(`/ticket/task/${params.row.id}`, { state: { ticketCode: params.row.tickCode } })} variant="text"><ListAltIcon /></Button>
-          </Tooltip>
+        <Stack direction="row" spacing={0}> 
           <Tooltip title="Show Ticket">
             <Button sx={{ minWidth: 40 }} onClick={() => handleNavigate(`/ticket/${params.row.id}`, { state: { ticketCode: params.row.tickCode } })} variant="text">
               👁️
@@ -185,22 +181,7 @@ export default function TiketList() {
       setTotalCount(0);
     }
     setLoader(false)
-  }, []);
-
-    const [dropdownOptions, setDropdownOptions] = useState<IDealDropdown>({
-      pipelines: [],
-      contacts: [],
-      items: [],
-      organizations: [],
-      owners: [],
-      status: [],
-      dealtypes: [],
-      filetypes: [],
-      bilingFreqency: [],
-      paymentTerm: [],
-    })
-
-    
+  }, []);    
 
   useEffect(() => {
     setUpHeader({
@@ -258,19 +239,7 @@ useEffect (() =>{
   const fetchDropdownOptions = async () => {
         // Simulating API calls
         startLoader(true);
-        setDropdownOptions({
-          pipelines: await fetchOptions('pipelines'),
-          organizations:[] ,
-          contacts: [],
-          items: [],
-          owners: [],
-          status: [],
-          filetypes: [],
-          dealtypes: [],
-          bilingFreqency: [],
-          paymentTerm: [],
-        });
-        startLoader(false)
+        startLoader(false);
       };
       fetchDropdownOptions();
   

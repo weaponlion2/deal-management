@@ -229,7 +229,7 @@ const DealPage: React.FC = () => {
                         closeDate: dayjs().format("YYYY-MM-DD"),
                         openDate: dayjs().format("YYYY-MM-DD")
                     }));
-                setItemData(visitperyear === 0 ? [] : initialValue);        
+                setItemData(visitperyear === 0 ? [] : initialValue);
                 setTicketData((prevData) => ({
                     ...prevData,
                     visitperyear: visitperyear
@@ -560,16 +560,6 @@ const DealPage: React.FC = () => {
             setSearchCont(false);
         }
     }
-
-    // const replicateToAll = () => {
-    //     setItemData((prev) =>
-    //         prev.map((item) => ({
-    //             ...item,
-    //             waranty: item.waranty || replicateValue, // only update if empty
-    //         }))
-    //     );
-    //     setReplicateIndex(null); // hide replicate message
-    // };
 
     return (
         <Paper>
@@ -1116,12 +1106,7 @@ const DealPage: React.FC = () => {
                                 <Button variant="contained" color="primary" onClick={() => handleSubmit()}>
                                     {did ? 'Update' : 'Create'} Deal
                                 </Button>
-                            </Box>
-                            <Box display="flex" justifyContent="center">
-                                <Button variant="contained" color="info" onClick={() => handleSubmit("/ticket/form")}>
-                                    {did ? 'Update' : 'Create'} Deal & Go to Ticket
-                                </Button>
-                            </Box>
+                        </Box> 
                         </Grid>
 
                     </Grid>

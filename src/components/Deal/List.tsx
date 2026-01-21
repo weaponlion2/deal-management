@@ -4,8 +4,8 @@ import { DataGrid, GridColDef, GridRenderCellParams } from '@mui/x-data-grid';
 import { FIRE, HEADER_FIRE, Response, START_LOADER } from '../Layout.Interface';
 import { NavigateOptions, Link as RLink, useNavigate, useOutletContext } from "react-router-dom";
 import { Box, Button, Link, MenuItem, Paper, Stack, TextField, Tooltip, Typography } from '@mui/material';
-import { PrioriteNode, StatusTypography, TicketView } from '../Ticket/List';
-import { fetchOptions, Priorites, Statuses } from '../Ticket/Ticket';
+import { StatusTypography, TicketView } from '../Ticket/List';
+import { fetchOptions, Statuses } from '../Ticket/Ticket';
 import { FileTypes, IDeal, IDealDropdown } from './Deal';
 import { AxiosError } from 'axios';
 import HandshakeIcon from '@mui/icons-material/Handshake';
@@ -107,7 +107,6 @@ export default function DealList() {
         loadDropdowns();
     }, []);
 
-
     const columns: GridColDef[] = [
         {
             field: 'nameOrgContact',
@@ -178,37 +177,6 @@ export default function DealList() {
             ),
         },
     ];
-
-    // const getData = useCallback(async (currPage: number = 0, perPage: number = 20, query: string = "") => {
-    //     setLoader(true);
-    //     try { //2024-12-20
-    //         const req = await myAxios.get(`/Deal/ShowDeals?id=0&showdealitem=false&fromdate=&todate=&pageno=${currPage}&recordperpage=${perPage}&showall=false&query=${query}`);
-    //         if (req.status === 200) {
-    //             const { data, status, totalCount }: Response<IDealView[]> = req.data;
-    //             if (status === "Success") {
-    //                 if (typeof data !== "undefined") {
-    //                     setList(data);
-    //                 }
-    //                 if (typeof totalCount !== "undefined") {
-    //                     setTotalCount(totalCount);
-    //                 }
-    //             }
-    //             else {
-    //                 setList([])
-    //                 setTotalCount(0);
-    //             }
-    //         }
-    //     } catch (_err: unknown) {
-    //         if (_err instanceof AxiosError) {
-    //             console.log(_err.message);
-    //         } else {
-    //             console.log("An unexpected error occurred");
-    //         }
-
-    //         setTotalCount(0);
-    //     }
-    //     setLoader(false)
-    // }, []);
 
     const getData = useCallback(
         async (

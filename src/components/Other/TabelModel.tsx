@@ -121,24 +121,15 @@ const TabelModel = ({ mid, tType }: Props) => {
             ),
 
         },
-        // { field: 'pipeline', headerName: 'Pipeline', width: (1215 * 8 / 100), disableColumnMenu: true },
         {
             field: 'createdOn', headerName: 'CreatedOn', width: (1215 * 10 / 100), disableColumnMenu: true,
             renderCell: (params) => dayjs(params.value).format("YYYY-MM-DD")
         },
-        {
-            field: 'priority', headerName: 'Priority', width: (1215 * 10 / 100), disableColumnMenu: true,
-            renderCell: (params: GridRenderCellParams<TicketView, typeof Priorites[number]['id']>): ReactNode => (
-                <>
-                    {params.value && PrioriteNode[params.value]}
-                </>
-            ),
-        },
-        { field: 'productName', headerName: 'Product', width: (1215 * 12 / 100), disableColumnMenu: true },
+        { field: 'productName', headerName: 'Product', width: (1215 * 20 / 100), disableColumnMenu: true },
         {
             field: 'status',
             headerName: 'Status',
-            width: (1215 * 10 / 100),
+            width: (1215 * 12 / 100),
             renderCell: (params: GridRenderCellParams<TicketForm, typeof Statuses[number]['id']>): ReactNode => (
                 <>
                     {params.value && StatusTypography[params.value]}
@@ -260,7 +251,7 @@ const TabelModel = ({ mid, tType }: Props) => {
                 url += `/Deal/ShowDeals?id=0&showdealitem=false&fromdate=&todate=&pageno=${currPage}&recordperpage=${perPage}&showall=false&query=${query}&orgid=${mid}&cid=${0}`
             }
             else if (tType === "TICKET") {
-                url += `/Tickets/ShowTicket?id=0&fromdate=&todate=&pageno=${currPage}&recordperpage=${perPage}&showall=false&query=${query}&dealid=${mid}&cid=${0}`
+                url += `/Ticket/ShowTicket?id=0&fromdate=&todate=&pageno=${currPage}&recordperpage=${perPage}&showall=false&query=${query}&dealid=${mid}&cid=${0}`
             }
             else if (tType === "ORG-TIC") {
                 url += `/Tickets/ShowTicket?id=0&fromdate=&todate=&pageno=${currPage}&recordperpage=${perPage}&showall=false&query=${query}&dealid=${0}&orgid=${mid}&cid=${0}`

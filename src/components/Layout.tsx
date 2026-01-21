@@ -6,7 +6,7 @@ import { Outlet, useNavigate } from 'react-router-dom';
 import ExitToAppIcon from '@mui/icons-material/ExitToApp';
 import { AccountBox, AddCircle, CancelOutlined, Visibility } from '@mui/icons-material';
 import { FIRE, HEADER, HEADER_FIRE, Loader, Response, START_LOADER } from './Layout.Interface';
-import logo from "@/assets/logo.png";
+import logo from "../assets/logo.png";
 import CloseIcon from '@mui/icons-material/Close';
 import LockResetIcon from '@mui/icons-material/LockReset';
 import myAxios from './api';
@@ -201,9 +201,9 @@ export const Layout = ({ setIsDark, isDark }: PropType) => {
                             <Button variant='text' onClick={() => handleNavigate("/organizations")} sx={{ display: 'block' }} >
                                 {"Organization"}
                             </Button>
-                            <Button variant='text' onClick={() => handleNavigate("/task")} sx={{ display: 'block' }} >
+                            {/* <Button variant='text' onClick={() => handleNavigate("/task")} sx={{ display: 'block' }} >
                                 {"Task"}
-                            </Button>
+                            </Button> */}
                             <Button variant='text' onClick={() => handleNavigate("/contacts")} sx={{ display: 'block' }} >
                                 {"Contact"}
                             </Button>
