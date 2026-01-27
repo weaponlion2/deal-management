@@ -155,10 +155,10 @@ export default function DealList() {
                         <Button sx={{ minWidth: 20 }} onClick={() => handleNavigate(`/deal/${params.row.id}`)} variant="text">👁️</Button>
                     </Tooltip>
                     <Tooltip title="Modify Deal">
-                        <Button sx={{ minWidth: 20 }} onClick={() => handleNavigate(`/deal/form/${params.row.id}`)} variant="text">✏️</Button>
+                        <Button sx={{ minWidth: 20 }} disabled={params.row.dealstatus === "CLO"} onClick={() => handleNavigate(`/deal/form/${params.row.id}`)} variant="text">✏️</Button>
                     </Tooltip>
                     <Tooltip title="Renew Deal">
-                        <Button sx={{ minWidth: 40 }} onClick={() => handleNavigate(`/deal/form/${params.row.id}`, { state: { renew: true } })} variant="text">🔁</Button>
+                        <Button sx={{ minWidth: 40 }} disabled={params.row.dealstatus === "CLO"} onClick={() => handleNavigate(`/deal/form/${params.row.id}`, { state: { renew: true } })} variant="text">🔁</Button>
                     </Tooltip>
                     <Button sx={{ minWidth: 40, display: "none" }} variant="text">🗑️</Button>
                 </Stack>

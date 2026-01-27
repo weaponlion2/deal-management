@@ -142,7 +142,7 @@ export default function TiketList() {
             </Button>
           </Tooltip>
           <Tooltip title="Modify Ticket">
-            <Button sx={{ minWidth: 40 }} onClick={() => handleNavigate(`/ticket/form/${params.row.id}`)} variant="text">✏️</Button>
+            <Button sx={{ minWidth: 40 }} disabled={params.row.status === "CLO"} onClick={() => handleNavigate(`/ticket/form/${params.row.id}`)} variant="text">✏️</Button>
           </Tooltip>
           <Button sx={{ minWidth: 40, display: "none" }} variant="text">🗑️</Button>
         </Stack>

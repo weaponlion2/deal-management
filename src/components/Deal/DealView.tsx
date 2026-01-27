@@ -86,6 +86,7 @@ interface DView extends IDeal {
 }
 const DealView: React.FC = () => {
   const { did } = useParams<{ did: string | undefined }>();
+  const [isClosed, setIsClosed] = useState(false);
   const logedUser: number =
     localStorage.getItem("@Id") === null
       ? -1
@@ -222,7 +223,9 @@ const DealView: React.FC = () => {
         const { data, status }: Response<DView[]> = req.data;
         if (status === "Success") {
           if (typeof data !== "undefined") {
-            setTicketData({ ...data[0] });
+            const dealData = data[0];
+            setTicketData(dealData);
+            dealData.dealstatus === "CLO" && setIsClosed(true);
           }
         }
       }
@@ -610,6 +613,7 @@ const DealView: React.FC = () => {
                 color="primary"
                 startIcon={<UploadFileIcon />}
                 onClick={handleOpenDialog}
+                 disabled={isClosed}
               >
                 Upload File
               </Button>
@@ -679,7 +683,7 @@ const DealView: React.FC = () => {
         >
           <Typography variant="h6">Deal Comment</Typography>
           {!showInput ? (
-            <Button variant="outlined" onClick={() => setShowInput(true)}>
+            <Button variant="outlined" disabled={isClosed} onClick={() => setShowInput(true)}>
               Add Comment
             </Button>
           ) : (

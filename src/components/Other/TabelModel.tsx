@@ -85,7 +85,7 @@ const TabelModel = ({ mid, tType }: Props) => {
                         </Button>
                     </Tooltip>
                     <Tooltip title="Modify Ticket">
-                        <Button sx={{ minWidth: 40 }} onClick={() => navigate(`/ticket/form/${params.row.id}`)} variant="text">✏️</Button>
+                        <Button sx={{ minWidth: 40 }} disabled={params.row.status === "CLO"} onClick={() => navigate(`/ticket/form/${params.row.id}`)} variant="text">✏️</Button>
                     </Tooltip>
                     <Button sx={{ minWidth: 40, display: "none" }} variant="text">🗑️</Button>
                 </Stack>
@@ -120,7 +120,7 @@ const TabelModel = ({ mid, tType }: Props) => {
                         <Button sx={{ minWidth: 40 }} onClick={() => handleNavigate(`/deal/${params.row.id}`)} variant="text">👁️</Button>
                     </Tooltip>
                     <Tooltip title="Modify Deal">
-                        <Button sx={{ minWidth: 40 }} onClick={() => handleNavigate(`/deal/form/${params.row.id}`)} variant="text">✏️</Button>
+                        <Button sx={{ minWidth: 40 }} disabled={params.row.dealstatus === "CLO"} onClick={() => handleNavigate(`/deal/form/${params.row.id}`)} variant="text">✏️</Button>
                     </Tooltip>
                     <Button sx={{ minWidth: 40, display: "none" }} variant="text">🗑️</Button>
                 </Stack>
@@ -178,16 +178,16 @@ const TabelModel = ({ mid, tType }: Props) => {
                 url += `/Deal/ShowDeals?id=0&showdealitem=false&fromdate=&todate=&pageno=${currPage}&recordperpage=${perPage}&showall=false&query=${query}&orgid=${mid}&cid=${0}`
             }
             else if (tType === "TICKET") {
-                url += `/Ticket/ShowTicket?id=0&fromdate=&todate=&pageno=${currPage}&recordperpage=${perPage}&showall=false&query=${query}&dealid=${mid}&cid=${0}`
+                url += `/Ticket/ShowTicket?id=0&fromdate=&todate=&pageno=${currPage}&recordperpage=${perPage}&showall=false&query=${query}&dealid=${mid}&cid=${0}&isopen=false`
             }
             else if (tType === "ORG-TIC") {
-                url += `/Ticket/ShowTicket?id=0&fromdate=&todate=&pageno=${currPage}&recordperpage=${perPage}&showall=false&query=${query}&dealid=${0}&orgid=${mid}&cid=${0}`
+                url += `/Ticket/ShowTicket?id=0&fromdate=&todate=&pageno=${currPage}&recordperpage=${perPage}&showall=false&query=${query}&dealid=${0}&orgid=${mid}&cid=${0}&isOpen=false`
             }
             else if (tType === "CONTACT-DEAL") {
                 url += `/Deal/ShowDeals?id=0&showdealitem=false&fromdate=&todate=&pageno=${currPage}&recordperpage=${perPage}&showall=false&query=${query}&orgid=${0}&cid=${mid}`
             }
             else if (tType === "CONTACT-TICKET") {
-                url += `/Ticket/ShowTicket?id=0&fromdate=&todate=&pageno=${currPage}&recordperpage=${perPage}&showall=false&query=${query}&dealid=${0}&cid=${mid}`
+                url += `/Ticket/ShowTicket?id=0&fromdate=&todate=&pageno=${currPage}&recordperpage=${perPage}&showall=false&query=${query}&dealid=${0}&cid=${mid}&isOpen=false`
             }
             const req = await myAxios.get(url);
             if (req.status === 200) {

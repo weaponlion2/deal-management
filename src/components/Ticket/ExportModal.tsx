@@ -54,22 +54,19 @@ interface IProps {
 interface IExcelData {
     customerName: string,
     city: string,
-    mobile : string,
-    serialNo : string,
+    mobile : string, 
     model: string,
-    dateIn : string,
-    dateOut: string,
+    openingdate : string,
+    closingdate: string,
     natureOfproblem: string, 
-    call_status: string,
-    warranty?: string,
-    month?: string,
+    call_status: string
 }
 
 const Initial: ExportForm = {
-    formdate: "",
+    formdate: dayjs().format("YYYY-MM-DD"),
     productId: "",
     productTypeId: "",
-    todate: ""
+    todate: dayjs().format("YYYY-MM-DD")
 };
 
 export default function ExportModal({
@@ -80,13 +77,6 @@ export default function ExportModal({
 }: IProps) {
     const [ticketData, setTicketData] = useState<ExportForm>(Initial);
     const [warningList, setWarningList] = useState<FormErr>(InitialErr);
-    // const [dropdown, setDropdown] = useState<{
-    //     productDropdown: DropdownOption[];
-    //     productTypeDropdown: DropdownOption[];
-    // }>({
-    //     productDropdown: [],
-    //     productTypeDropdown: []
-    // });
 
     const handleInputChange = (
         e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -102,7 +92,7 @@ export default function ExportModal({
         if (validateInput() === true) {
             startLoader(true)
             handleModel(false)
-            let req: AxiosResponse = await myAxios.get(`/Tickets/ShowExecelExportData?fromdate=${ticketData.formdate}&todate=${ticketData.todate}`);
+            let req: AxiosResponse = await myAxios.get(`/Ticket/ShowExecelExportData?fromdate=${ticketData.formdate}&todate=${ticketData.todate}`);
             try {
                 const { status, data }: Response<IExcelData[]> = req.data;
                 if (status === "Success") {
@@ -167,17 +157,11 @@ export default function ExportModal({
           'Customer Name': item.customerName,
           'City': item.city,
           'Mobile Number': item.mobile,
-          'Littmann Model': item.model,
-          'Serial Number': item.serialNo,
-          'PO date': item.dateIn,
-          'Date IN': item.dateIn,
-          'Nature of Problem': item.natureOfproblem,
-          'Spares Required': '', 
-          'Call Status': StatusText[item.call_status as typeof Statuses[number]['id']],
-          'Date OUT': item.dateOut,
-          'Month': `${dayjs(item.dateIn).format('MMM')}, ${dayjs(item.dateIn).format('YY')}`, 
-          'Status': '', // 
-          'WARRANTY': dayjs(item.warranty).isAfter(dayjs()) ? 'Yes' : 'No', 
+          'Product': item.model,
+          'Opening Date': item.openingdate,
+          'Closing Date': item.closingdate,
+          'Remark': item.natureOfproblem,
+          'Status': StatusText[item.call_status as typeof Statuses[number]['id']]
         }));
       
         // Create a new workbook

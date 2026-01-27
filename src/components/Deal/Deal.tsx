@@ -93,8 +93,8 @@ const DealPage: React.FC = () => {
         pipeline: '-1',
         orgid: '0',
         contid: '0',
-        startdate: dayjs().format("YYYY-MM-DDTHH:mm"),
-        enddate: "",
+        startdate: dayjs().format("YYYY-MM-DD"),
+        enddate: dayjs().add(1, "year").format("YYYY-MM-DD"),
         dealtypeid: "-1",
         dealstatus: "-1",
         remarks: "",
@@ -377,8 +377,8 @@ const DealPage: React.FC = () => {
                     if (dealData !== null) {
                         const items: DropdownOption[] = dealData['pipeline'] !== "" ? await fetchOptions("items", dealData['pipeline']) : [];
                         setDropdownOptions((dropdownOptions) => ({ ...dropdownOptions, items: [...items] }));
-                        setTicketData({ ...dealData, startdate: dayjs(dealData['startdate']).format("YYYY-MM-DDTHH:mm"), enddate: dealData['enddate'] !== "" ? dayjs(dealData['enddate']).format("YYYY-MM-DDTHH:mm") : "", dealstatus: renew == true ? "RE" : dealData["dealstatus"] });
-                        getTicketData(dealData.id);
+                        setTicketData({ ...dealData, startdate: dayjs(dealData['startdate']).format("YYYY-MM-DD"), enddate: dealData['enddate'] !== "" ? dayjs(dealData['enddate']).format("YYYY-MM-DD") : "", dealstatus: renew == true ? "RE" : dealData["dealstatus"], visitperyear: renew == true ? 0 : dealData['visitperyear'] });
+                        renew != true && getTicketData(dealData.id);
                     }
                 }
             }
@@ -393,7 +393,7 @@ const DealPage: React.FC = () => {
     
     const getTicketData = async (did: number) => {
         try { //2024-12-20
-            const req = await myAxios.get(`/Ticket/ShowTicket?dealid=${did}&pageno=0&recordperpage=1&showall=true`);
+            const req = await myAxios.get(`/Ticket/ShowTicket?dealid=${did}&pageno=0&recordperpage=1&showall=true&isOpen=false`);
             if (req.status === 200) {
                 const { data, status }: Response<IDealItem[]> = req.data;
                 if (status === "Success") {
@@ -656,21 +656,22 @@ const DealPage: React.FC = () => {
                                     <MenuItem value={-1}>
                                         {dropdownOptions.status.length === 0 ? "No Status" : "Choose Status"}
                                     </MenuItem>
-                                    {dropdownOptions?.status.map((option) => (
-                                        <MenuItem key={option.statuscode} value={option.statuscode}>
-                                            {option.statusname}
-                                        </MenuItem>
-                                    ))}
+                                    {dropdownOptions?.status.map((option) => {
+                                        if(!renew && option.statuscode != "RE") 
+                                            return (
+                                            <MenuItem key={option.statuscode} value={option.statuscode}>
+                                                {option.statusname}
+                                            </MenuItem>
+                                        )
+                                        else if(renew && option.statuscode == "RE") 
+                                            return (
+                                            <MenuItem key={option.statuscode} value={option.statuscode}>
+                                                {option.statusname}
+                                            </MenuItem>
+                                        )
+                                    } )}
                                 </Select>
                             </FormControl>
-                            {/* {warningList.status && (
-                                <Typography
-                                    variant="button"
-                                    sx={{ display: "block", textAlign: "right", color: "red" }}
-                                >
-                                    {warningList.status}
-                                </Typography>
-                            )} */}
                         </Grid>
 
                         {/* Organization Dropdown */}
@@ -857,7 +858,7 @@ const DealPage: React.FC = () => {
                             <TextField
                                 // disabled
                                 label="Start Date"
-                                type="datetime-local"
+                                type="date"
                                 size='small'
                                 fullWidth
                                 required
@@ -880,7 +881,7 @@ const DealPage: React.FC = () => {
                                 size='small'
                                 fullWidth
                                 required
-                                type='datetime-local'
+                                type='date'
                                 value={ticketData.enddate}
                                 onChange={handleInputChange}
                                 name="enddate"

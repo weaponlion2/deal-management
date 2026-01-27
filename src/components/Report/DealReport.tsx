@@ -18,26 +18,40 @@ import {
     // Stack,
     // Tooltip,
 } from '@mui/material';
-import { fetchOptions, Priorites } from '../Ticket/Ticket';
+import { fetchOptions, Statuses } from '../Ticket/Ticket';
 import { FileTypes, IDealDropdown } from '../Deal/Deal';
 import { NavigateOptions, Link as RLink, useNavigate, useOutletContext } from 'react-router-dom';
 import { FIRE, HEADER_FIRE, START_LOADER } from '../Layout.Interface';
 import myAxios from '../api';
 import { AxiosError } from 'axios';
 import { DataGrid, GridColDef, GridRenderCellParams } from '@mui/x-data-grid';
-import { PrioriteNode, TicketView } from '../Ticket/List';
+import { StatusTypography, TicketView } from '../Ticket/List';
 import HandshakeIcon from '@mui/icons-material/Handshake';
 import BusinessIcon from '@mui/icons-material/Business';
 import dayjs from 'dayjs';
 import * as XLSX from 'xlsx';
-
+import { StatusText } from '../Ticket/ExportModal';
 
 export const handleDownloadExcel = (list:any, deal:boolean) => {
-    if (!list || list.length === 0) {
+    const exportData = list.map((item: any) => ({
+              'Deal Name': item.name,
+              'Pipeline': item.pipeline,
+              'Organization Name': item.organizationName,
+              'contactName Name': item.contactName,
+              'Billing': item.billingname,
+              'Payment Term': item.paymenttermname,
+              'Deal Type': item.dealTypeName,
+              'Product': item.productname,
+              'Remark': item.remark,
+              'Status': StatusText[item.call_status as typeof Statuses[number]['id']],
+              'Valid From': item.startdate,
+              'Valid Upto': item.enddate
+            }));
+    if (!exportData || exportData.length === 0) {
         alert("No data to download");
         return;
     }
-    const worksheet = XLSX.utils.json_to_sheet(list);
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Deals");
     XLSX.writeFile(workbook, deal ? "deal_report.xlsx": "visit.xlsx");
@@ -48,15 +62,13 @@ export default function DealReport() {
     const [filter, setFilter] = useState({
         pipeline: '0',
         dealType: '0',
-        stage: '0',
+        dealstatus: '0',
         priority: '0',
         status: 'ExpiringIn',
         organization: '0',
         days: '60'
     });
     const navigate = useNavigate();
-
-
     const [dropdownOptions, setDropdownOptions] = useState<IDealDropdown>({
         pipelines: [],
         contacts: [],
@@ -76,7 +88,6 @@ export default function DealReport() {
         pageSize: 25,
     });
     const [list, setList] = useState<any | []>([]);
-
     const handleNavigate = (arg0: string, state?: NavigateOptions): undefined => {
         navigate(arg0, state)
     };
@@ -104,19 +115,26 @@ export default function DealReport() {
             ),
         },
         { field: 'pipeline', headerName: 'Pipeline', width: (1215 * 10 / 100) },
-        { field: 'dealTypeName', headerName: 'Deal Type', width: (1215 * 10 / 100) },
-        { field: 'amount', headerName: 'Amount', width: (1215 * 8 / 100) },
-        { field: 'stage', headerName: 'Status', width: (1215 * 16 / 100) },
+        { field: 'dealTypeName', headerName: 'Deal Type', width: (1215 * 10 / 100) }, 
+        { field: 'productname', headerName: 'Product', width: (1215 * 10 / 100) }, 
+        { field: 'dealstatus', headerName: 'Status', width: (1215 * 10 / 100),
+            renderCell: (params: GridRenderCellParams<TicketView, typeof Statuses[number]['id']>): ReactNode => (
+                            <>
+                              {params.value && StatusTypography[params.value]}
+                            </>
+                          ),
+                          disableColumnMenu: true
+         },
         {
-            field: 'priority', headerName: 'Priority', width: (1215 * 10 / 100), disableColumnMenu: true,
-            renderCell: (params: GridRenderCellParams<TicketView, typeof Priorites[number]['id']>): ReactNode => (
-                <>
-                    {params.value && PrioriteNode[params.value]}
-                </>
-            ),
+            field: 'startdate',
+            headerName: 'Valid From',
+            width: (1215 * 10) / 100,
+            valueFormatter: (params: any) => {
+                return params ? dayjs(params).format('DD-MM-YYYY') : '';
+            },
         },
         {
-            field: 'closedate',
+            field: 'enddate',
             headerName: 'Valid Upto',
             width: (1215 * 10) / 100,
             valueFormatter: (params: any) => {
@@ -143,7 +161,7 @@ export default function DealReport() {
                     dealtypes: await fetchOptions("dealtypes"),
                     bilingFreqency: [],
                     paymentTerm: [],
-                    status: dropdownOptions.status
+                    status: await fetchOptions('statuses'),
                 });
             } catch (err) {
                 console.error('Failed to load dropdowns', err);
@@ -179,8 +197,7 @@ export default function DealReport() {
     const handleSearch = useCallback(async () => {
         setLoader(true);
         try {
-            const resp = await myAxios.get(`Deal/SearchDeals?orgid=${filter.organization}&stage=${filter?.stage === "0" ? '' : filter?.stage }&pipeline=${filter.pipeline}&type=${filter.dealType}&priority=${filter?.priority === "0" ? "" : filter?.priority}&status=${filter.status === "0" ? "" :filter.status }&days=${filter.status === "ExpiringIn" ? filter.days : 0}&pageno=${paginationModel?.page}&recordperpage=${paginationModel?.pageSize}`)
-            // console.log(resp.data?.totalCount);
+            const resp = await myAxios.get(`Deal/SearchDeals?orgid=${filter.organization}&dealstatus=${filter?.dealstatus === "0" ? '' : filter?.dealstatus}&pipeline=${filter.pipeline}&dealtypeid=${filter.dealType}&status=${filter.status === "0" ? "" :filter.status }&days=${filter.status === "ExpiringIn" ? filter.days : 0}&pageno=${paginationModel?.page}&recordperpage=${paginationModel?.pageSize}`)
             if (resp.status === 200) {
                 if (resp.data.status === "Success") {
                     setList(resp.data?.data);
@@ -203,10 +220,7 @@ export default function DealReport() {
             }
             setLoader(false)
         }
-    }, [filter?.organization, filter?.dealType, filter?.days, filter?.pipeline, filter?.stage, filter?.priority, filter?.status, paginationModel?.page, paginationModel?.pageSize])
-    // console.log(dropdownOptions?.organizations)
-
- 
+    }, [filter])
 
 
     return (
@@ -257,18 +271,18 @@ export default function DealReport() {
 
                     <Grid size={{ xs: 12, sm: 4 }}>
                         <FormControl fullWidth size="small">
-                            <InputLabel>Status</InputLabel>
+                            <InputLabel>Deal Status</InputLabel>
                             <Select
-                                value={filter.stage}
-                                label="Stage"
+                                value={filter.dealstatus}
+                                label="Deal Status"
                                 onChange={(e) => handleChange('stage', e.target.value)}
                             >
                                 <MenuItem value="0">
-                                    {dropdownOptions.status.length === 0 ? "No Statuses" : "Choose Status"}
+                                    {dropdownOptions.status.length === 0 ? "No Deal Status" : "Choose Deal Status"}
                                 </MenuItem>
                                 {dropdownOptions.status.map((option, i) => (
-                                    <MenuItem key={i} value={option.stagecode}>
-                                        {option.stagename}
+                                    <MenuItem key={i} value={option.statuscode}>
+                                        {option.statusname}
                                     </MenuItem>
                                 ))}
                             </Select>
@@ -356,7 +370,7 @@ export default function DealReport() {
                                 setFilter({
                                     pipeline: '',
                                     dealType: '',
-                                    stage: '',
+                                    dealstatus: '',
                                     priority: '',
                                     status: '',
                                     organization: '',

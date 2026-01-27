@@ -34,6 +34,7 @@ import {
   DialogContent,
   MenuItem,
   DialogActions,
+  Badge,
 } from "@mui/material";
 import {
   commentForm,
@@ -66,6 +67,7 @@ import {
 } from "@mui/icons-material";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import DownloadIcon from "@mui/icons-material/Download";
+import dayjs from "dayjs";
 
 const NA = "N/A";
 
@@ -156,6 +158,7 @@ export const SourcesNode: Record<
 const TicketView: React.FC = () => {
   const { uid } = useParams<{ uid: string | undefined }>();
   const navigate = useNavigate();
+  const [isClosed, setIsClosed] = useState(false);
   const { setUpHeader, startLoader, startFir } = useOutletContext<{
     startFir: FIRE;
     setUpHeader: HEADER_FIRE;
@@ -337,14 +340,16 @@ const TicketView: React.FC = () => {
   const getData = async (uid: string) => {
     try {
       const req = await myAxios.get(
-        `/Ticket/ShowTicket?id=${uid}&fromdate=&todate=&pageno=0&recordperpage=0&showall=true&showTask=true`
+          `/Ticket/ShowTicket?id=${uid}&fromdate=&todate=&pageno=0&recordperpage=0&showall=true&showTask=true&isopen=false`
       );
       if (req.status === 200) {
         const { data, status }: Response<TNView[]> = req.data;
         if (status === "Success") {
           if (typeof data !== "undefined") {
-            setTicketData({ ...data[0] });
+            const ticketData = data[0];
+            setTicketData(ticketData);
             getHistory(uid);
+            ticketData.status === "CLO" && setIsClosed(true);
           }
         }
       }
@@ -686,7 +691,7 @@ const TicketView: React.FC = () => {
                 <Typography variant="h6" gutterBottom sx={{ mb: 0 }}>
                   Activity Timeline
                 </Typography>
-                <AddComment color="primary" />
+                {/* <AddComment color="primary" /> */}
               </Box>
 
               {/* Activity Timeline */}
@@ -716,23 +721,22 @@ const TicketView: React.FC = () => {
                             <TimelineConnector />
                           )}
                         </TimelineSeparator>
-                        <TimelineContent sx={{ px: 2 }}>
-                          <Typography
-                            variant="caption"
-                            color="text.secondary"
-                            display="block"
-                          >
-                            {item.createOn}
-                          </Typography>
-                          <Typography
-                            variant="body2"
-                            fontWeight={500} 
-                          >
-                            {item.userName}
-                          </Typography>
+                        <TimelineContent sx={{ px: 2 }}>                          
+                          <Box sx={{gap: 2}}>
+                            <Box sx={{display: "flex", alignItems: "center", gap: 2}}>
+                              <Chip label={item.userName} size="small"/>
+                              <Typography
+                              variant="caption"
+                              color="text.secondary"
+                              display="block"
+                            >
+                              {(dayjs(item.createOn).format("YYYY-MM-YY HH:MM:ss"))}
+                            </Typography>
+                            </Box>
                           <Typography variant="body2" sx={{ mt: 0.5 }}>
                             {item.comments}
                           </Typography>
+                          </Box>
                         </TimelineContent>
                       </TimelineItem>
                     ))}
@@ -761,12 +765,13 @@ const TicketView: React.FC = () => {
                   onChange={(e) => setComment(e.target.value)}
                   variant="outlined"
                   size="small"
-                  sx={{ mb: 2 }}
+                  sx={{ mb: 2 }} 
+                  disabled={isClosed}
                 />
                 <Button
                   variant="contained"
                   onClick={handleSubmit}
-                  disabled={!comment.trim()}
+                  disabled={!comment.trim() || isClosed}
                   fullWidth
                   startIcon={<Send />}
                 >
@@ -794,6 +799,7 @@ const TicketView: React.FC = () => {
                 color="primary"
                 startIcon={<UploadFileIcon />}
                 onClick={handleOpenDialog}
+                disabled={isClosed}
               >
                 Upload File
               </Button>
